@@ -1,0 +1,572 @@
+diff -rupN src/57_iopsp_parser/inpspheads.F90 src_new/57_iopsp_parser/inpspheads.F90
+--- src/57_iopsp_parser/inpspheads.F90	2014-01-12 16:23:57.000000000 -0500
++++ src_new/57_iopsp_parser/inpspheads.F90	2014-02-13 09:09:47.000000000 -0500
+@@ -75,7 +75,7 @@
+ !the n1xccc value will be given by n1xccc_default. Otherwise it is set to 0.
+ !scalars
+  integer,parameter :: n1xccc_default=2501
+- integer :: ios
++ integer :: extension_switch,ios
+  integer :: idum,ii,ilmax,ipsp,ipsp_pawxml,lang,lmax,mmax,mpsang,n1xccc,nmesh,npsp_pawxml0
+  integer :: pspcod,pspso,test_paw,usexml, useupf !,,pspxc
+  real(dp) :: al,e990,e999,fchrg,qchrg,r1,rchrg,rr ! ,rp,rs
+@@ -505,7 +505,13 @@
+      read (tmp_unit,*) rchrg,fchrg,qchrg
+      if (fchrg>1.d-15) pspheads(ipsp)%xccc=n1xccc_default
+      read(tmp_unit,*) nproj(0:lmax)
+-     pspso=0
++     read (tmp_unit,*) extension_switch
++     if(extension_switch==2) then
++       pspso=2
++       read(tmp_unit,*) nprojso(1:lmax)
++     else
++       pspso=0
++     end if
+      pspheads(ipsp)%pspso=pspso
+ 
+    else if(pspcod==9)then
+diff -rupN src/65_psp/interfaces_65_psp.F90 src_new/65_psp/interfaces_65_psp.F90
+--- src/65_psp/interfaces_65_psp.F90	2014-01-12 16:27:11.000000000 -0500
++++ src_new/65_psp/interfaces_65_psp.F90	2014-02-13 09:09:47.000000000 -0500
+@@ -708,8 +708,8 @@ interface
+ end interface
+ 
+ interface
+- subroutine psp8in(ekb,epsatm,ffspl,indlmn,lloc,lmax,lmnmax,lnmax,&  
+-  &  mmax,mpsang,mqgrid,nproj,n1xccc,qchrg,qgrid,&  
++ subroutine psp8in(ekb,epsatm,ffspl,indlmn,lloc,lmax,lmnmax,lnmax,&
++  &  mmax,mpsang,mpssoang,mqgrid,nproj,n1xccc,pspso,qchrg,qgrid,&
+   &  useylm,vlspl,xcccrc,xccc1d,zion,znucl)
+   use defs_basis
+   implicit none
+@@ -719,8 +719,10 @@ interface
+   integer,intent(in) :: lnmax
+   integer,intent(in) :: mmax
+   integer,intent(in) :: mpsang
++  integer,intent(in) :: mpssoang
+   integer,intent(in) :: mqgrid
+   integer,intent(in) :: n1xccc
++  integer,intent(in) :: pspso
+   integer,intent(in) :: useylm
+   real(dp),intent(out) :: epsatm
+   real(dp),intent(out) :: qchrg
+@@ -730,7 +732,7 @@ interface
+   real(dp),intent(out) :: ekb(lnmax)
+   real(dp),intent(out) :: ffspl(mqgrid,2,lnmax)
+   integer,intent(out) :: indlmn(6,lmnmax)
+-  integer,intent(out) :: nproj(mpsang)
++  integer,intent(out) :: nproj(mpssoang)
+   real(dp),intent(in) :: qgrid(mqgrid)
+   real(dp),intent(out) :: vlspl(mqgrid,2)
+   real(dp),intent(out) :: xccc1d(n1xccc,6)
+@@ -756,17 +758,17 @@ interface
+ end interface
+ 
+ interface
+- subroutine psp8nl(amesh,ffspl,lmax,lnmax,mmax,mpsang,mqgrid,nproj,qgrid,rad,vpspll)
++ subroutine psp8nl(amesh,ffspl,indlmn,lmax,lmnmax,lnmax,mmax,mqgrid,qgrid,rad,vpspll)
+   use defs_basis
+   implicit none
+   integer,intent(in) :: lmax
+   integer,intent(in) :: lnmax
++  integer,intent(in) :: lmnmax
+   integer,intent(in) :: mmax
+-  integer,intent(in) :: mpsang
+   integer,intent(in) :: mqgrid
++  integer,intent(in) :: indlmn(6,lmnmax)
+   real(dp),intent(in) :: amesh
+   real(dp),intent(out) :: ffspl(mqgrid,2,lnmax)
+-  integer,intent(in) :: nproj(mpsang)
+   real(dp),intent(in) :: qgrid(mqgrid)
+   real(dp),intent(in) :: rad(mmax)
+   real(dp),intent(in) :: vpspll(mmax,lnmax)
+diff -rupN src/65_psp/psp8in.F90 src_new/65_psp/psp8in.F90
+--- src/65_psp/psp8in.F90	2014-01-12 16:23:57.000000000 -0500
++++ src_new/65_psp/psp8in.F90	2014-02-13 09:09:48.000000000 -0500
+@@ -24,9 +24,14 @@
+ !!  mmax=maximum number of points in real space grid in the psp file
+ !!   angular momentum of nonlocal pseudopotential
+ !!  mpsang= 1+maximum angular momentum for nonlocal pseudopotentials
++!!  mpssoang= 2*maximum angular momentum for nonlocal pseudopotentials-1
+ !!  mqgrid=dimension of q (or G) grid for arrays.
+ !!  n1xccc=dimension of xccc1d ; 0 if no XC core correction is used
+ !!  qgrid(mqgrid)=values of q (or |G|) on grid from 0 to qmax
++!!  pspso=spin-orbit characteristics, govern the content of ffspl and ekb
++!!   if =0 : this input requires NO spin-orbit characteristics of the psp
++!!   if =2 : this input requires HGH or psp8 characteristics of the psp
++!!   if =3 : this input requires HFN characteristics of the psp
+ !!  useylm=governs the way the nonlocal operator is to be applied:
+ !!         1=using Ylm, 0=using Legendre polynomials
+ !!  zion=nominal valence of atom as specified in psp file
+@@ -40,7 +45,7 @@
+ !!   each projector
+ !!  indlmn(6,i)= array giving l,m,n,lm,ln,s for i=ln  (if useylm=0)
+ !!                                           or i=lmn (if useylm=1)
+-!!  nproj(mpsang)=number of projection functions for each angular momentum
++!!  nproj(mpssoang)=number of projection functions for each angular momentum
+ !!  qchrg is not used, and could be suppressed later
+ !!  vlspl(mqgrid,2)=q^2 Vloc(q) and second derivatives from spline fit
+ !!  xcccrc=XC core correction cutoff radius (bohr)
+@@ -61,7 +66,7 @@
+ #include "abi_common.h"
+ 
+ subroutine psp8in(ekb,epsatm,ffspl,indlmn,lloc,lmax,lmnmax,lnmax,&
+-&                  mmax,mpsang,mqgrid,nproj,n1xccc,qchrg,qgrid,&
++&                  mmax,mpsang,mpssoang,mqgrid,nproj,n1xccc,pspso,qchrg,qgrid,&
+ &                  useylm,vlspl,xcccrc,xccc1d,zion,znucl)
+ 
+  use defs_basis
+@@ -81,23 +86,26 @@ subroutine psp8in(ekb,epsatm,ffspl,indlm
+ 
+ !Arguments ------------------------------------
+ !scalars
+- integer,intent(in) :: lloc,lmax,lmnmax,lnmax,mmax,mpsang,mqgrid,n1xccc,useylm
++ integer,intent(in) :: lloc,lmax,lmnmax,lnmax,mmax,mpsang,mpssoang,mqgrid
++ integer,intent(in)  :: pspso,n1xccc,useylm
+  real(dp),intent(in) :: zion,znucl
+  real(dp),intent(out) :: epsatm,qchrg,xcccrc
+ !arrays
+- integer,intent(out) :: indlmn(6,lmnmax),nproj(mpsang)
++ integer,intent(out) :: indlmn(6,lmnmax),nproj(mpssoang)
+  real(dp),intent(in) :: qgrid(mqgrid)
+  real(dp),intent(out) :: ekb(lnmax),ffspl(mqgrid,2,lnmax),vlspl(mqgrid,2)
+  real(dp),intent(out) :: xccc1d(n1xccc,6)
+ 
+ !Local variables-------------------------------
+ !scalars
+- integer :: extension_switch,iln,iln0,index,ipsang,irad,jj,kk,ll,ll_err,mm,nn
+- integer :: nso
++ integer :: extension_switch,iln,iln0,index,ipsang,irad,jj,kk,ll,ll_err,llin
++ integer :: mm,nn,nso,iln0_so
+  real(dp) :: amesh,damesh,fchrg,rchrg,yp1,ypn
+  character(len=500) :: message
+ !arrays
++ integer, allocatable :: nproj_tmp(:)
+  real(dp),allocatable :: rad(:),vloc(:),vpspll(:,:),work_space(:),work_spl(:)
++ real(dp),allocatable :: ffspl_so(:,:,:,:),ffspl_sr(:,:,:,:)
+ 
+ ! ***************************************************************************
+ 
+@@ -145,23 +153,40 @@ subroutine psp8in(ekb,epsatm,ffspl,indlm
+  call wrtout(ab_out,message,'COLL')
+  call wrtout(std_out,  message,'COLL')
+ 
+- nproj(:)=0
+- read (tmp_unit,*) nproj(1:lmax+1)
+- write(message, '(a,5i6)' ) '     nproj',nproj(1:lmax+1)
++ ABI_ALLOCATE(nproj_tmp,(mpssoang))
++
++ nproj_tmp(:)=0
++ read (tmp_unit,*) nproj_tmp(1:lmax+1)
++ write(message, '(a,5i6)' ) '     nproj',nproj_tmp(1:lmax+1)
+  call wrtout(ab_out,message,'COLL')
+  call wrtout(std_out,  message,'COLL')
+ 
+ !place holder for future implementation of additional optional header
+ !lines without invalidating existing psp files
++!Now (12/2014) extended to include spin-orbit projectors
+  read (tmp_unit,*) extension_switch
+- write(message, '(a,i6)' ) 'extension_switch',extension_switch
+- call wrtout(ab_out,message,'COLL')
+- call wrtout(std_out,  message,'COLL')
++ if(extension_switch==2) then
++   read (tmp_unit,*) nproj_tmp(lmax+2:2*lmax+1)
++   write(message, '(a,i6)' ) 'spin-orbit psp, extension_switch',extension_switch
++   call wrtout(ab_out,message,'COLL')
++   call wrtout(std_out,  message,'COLL')
++   write(message, '(a,5i6)' ) '   nprojso',nproj_tmp(lmax+2:2*lmax+1)
++   call wrtout(ab_out,message,'COLL')
++   call wrtout(std_out,  message,'COLL')
++ elseif(extension_switch==0) then
++   write(message, '(a,i6)' ) 'extension_switch',extension_switch
++   call wrtout(ab_out,message,'COLL')
++   call wrtout(std_out,  message,'COLL')
++ else
++   write(message, '(a,i6/a)' ) 'invalid extension_switch',extension_switch,&
++&    'Should be 0 for scalar-relativisgtic psp or 2 to include spin-orbit'
++   MSG_ERROR(message)
++ end if
+ 
+  if(lloc<4) then
+-   if (nproj(lloc+1)/=0) then
++   if (nproj_tmp(lloc+1)/=0) then
+      write(message, '(a,i4,a,a,i4,5a)' )&
+-&     '  Pseudopotential input file has nproj=',nproj(lloc+1),ch10,&
++&     '  Pseudopotential input file has nproj=',nproj_tmp(lloc+1),ch10,&
+ &     '  for angular momentum',lloc,' which is the local potential.',ch10,&
+ &     '  Should be 0 for the local potential',ch10,&
+ &     '  Action : check your pseudopotential input file.'
+@@ -172,13 +197,18 @@ subroutine psp8in(ekb,epsatm,ffspl,indlm
+ !--------------------------------------------------------------------
+ 
+ !Initialize array indlmn array giving l,m,n,lm,ln,s for i=lmn
+- nso=1
++ if(pspso==2) then
++   nso=2
++ else
++   nso=1
++ end if
++
+  index=0;iln=0;indlmn(:,:)=0
+  do nn=1,nso
+    do ipsang=1+(nn-1)*(lmax+1),nn*lmax+1
+-     if (nproj(ipsang)>0) then
+-       ll=ipsang-(nn-1)*lmax-1
+-       do kk=1,nproj(ipsang)
++     ll=ipsang-(nn-1)*lmax-1
++     if (nproj_tmp(ipsang)>0) then
++       do kk=1,nproj_tmp(ipsang)
+          iln=iln+1
+          do mm=1,2*ll*useylm+1
+            index=index+1
+@@ -194,6 +224,13 @@ subroutine psp8in(ekb,epsatm,ffspl,indlm
+    end do
+  end do
+ 
++! repackage nproj_tmp for proper use by pspatm
++  nproj(:)=0
++  nproj(1:lmax+1)=nproj_tmp(1:lmax+1)
++  if(pspso==2) then
++     nproj(mpsang+1:mpsang+lmax)=nproj_tmp(lmax+2:2*lmax+1)
++  end if
++
+  ABI_ALLOCATE(rad,(mmax))
+  ABI_ALLOCATE(vloc,(mmax))
+  ABI_ALLOCATE(vpspll,(mmax,lnmax))
+@@ -204,44 +241,48 @@ subroutine psp8in(ekb,epsatm,ffspl,indlm
+ !vpspll(:,1),...,vpspll(:,lnmax)=nonlocal projectors
+ !vloc(:)=local potential
+ 
+-!Read Kleinman-Bylander/Bloechl energies and projectors for each l
++!Read Vanderbilt-Kleinman-Bylander energies and projectors for each l
+ !or read local potential for l=lloc.
+ !Also get rad array (actually read more than once)
+  ll_err=0
+  iln0=0
+- do ipsang=1,lmax+1
+-   if(nproj(ipsang)>0) then
+-     read(tmp_unit,*) ll,ekb(iln0+1:iln0+nproj(ipsang))
+-     if(ll/=ipsang-1) then
+-       ll_err=ipsang
+-       exit
++ do nn=1,nso
++   do ipsang=1+(nn-1)*(lmax+1),nn*lmax+1
++     ll=ipsang-(nn-1)*lmax-1
++     if (nproj_tmp(ipsang)>0) then
++       read(tmp_unit,*) llin,ekb(iln0+1:iln0+nproj_tmp(ipsang))
++       if(llin/=ll) then
++         ll_err=ipsang
++         exit
++       end if
++       do irad=1,mmax
++         read(tmp_unit,*)jj,rad(irad),vpspll(irad,iln0+1:iln0+nproj_tmp(ipsang))
++       end do
++       iln0=iln0+nproj_tmp(ipsang)
++     elseif(ll==lloc .and. nn==1) then
++       read(tmp_unit,*) llin
++       if(llin/=ll) then
++         ll_err=ipsang
++         exit
++       end if
++       do irad=1,mmax
++         read(tmp_unit,*)jj,rad(irad),vloc(irad)
++       end do
+      end if
+-     do irad=1,mmax
+-       read(tmp_unit,*)jj,rad(irad),vpspll(irad,iln0+1:iln0+nproj(ipsang))
+-     end do
+-     iln0=iln0+nproj(ipsang)
+-   elseif(ipsang-1==lloc) then
+-     read(tmp_unit,*) ll
+-     if(ll/=ipsang-1) then
+-       ll_err=ipsang
++   end do !ipsang
++!Provision for general local potential /= any angular momentum potential
++   if(nn==1 .and. lloc>lmax) then
++     read(tmp_unit,*) llin
++     if(llin==lloc) then
++       do irad=1,mmax
++         read(tmp_unit,*)jj,rad(irad),vloc(irad)
++       end do
++     else
++       ll_err=lloc+1
+        exit
+      end if
+-     do irad=1,mmax
+-       read(tmp_unit,*)jj,rad(irad),vloc(irad)
+-     end do
+-   end if
+- end do
+-!Provision for general local potential /= any angular momentum potential
+- if(ll_err==0 .and. lloc>lmax) then
+-   read(tmp_unit,*) ll
+-   if(ll==lloc) then
+-     do irad=1,mmax
+-       read(tmp_unit,*)jj,rad(irad),vloc(irad)
+-     end do
+-   else
+-     ll_err=lloc+1
+    end if
+- end if
++ end do !nn
+ 
+  if(ll_err>0) then
+    write(message, '(5a,i4,a,i4,a,a)' )&
+@@ -306,13 +347,14 @@ subroutine psp8in(ekb,epsatm,ffspl,indlm
+  else
+ 
+ !  ----------------------------------------------------------------------
+-!  Compute KB-Bloechl form factors and fit splines
++!  Compute Vanderbilt-KB form factors and fit splines
+ 
+-   call psp8nl(amesh,ffspl,lmax,lnmax,mmax,mpsang,mqgrid,nproj,qgrid,rad,&
+-&   vpspll)
++   call psp8nl(amesh,ffspl,indlmn,lmax,lmnmax,lnmax,mmax,&
++&              mqgrid,qgrid,rad,vpspll)
+ 
+  end if
+ 
++ ABI_DEALLOCATE(nproj_tmp)
+  ABI_DEALLOCATE(vpspll)
+  ABI_DEALLOCATE(rad)
+  ABI_DEALLOCATE(vloc)
+diff -rupN src/65_psp/psp8nl.F90 src_new/65_psp/psp8nl.F90
+--- src/65_psp/psp8nl.F90	2014-01-12 16:23:57.000000000 -0500
++++ src_new/65_psp/psp8nl.F90	2014-02-13 09:09:48.000000000 -0500
+@@ -11,7 +11,7 @@
+ !!  0 to lmax may be represented.
+ !!
+ !! COPYRIGHT
+-!! Copyright (C) 1998-2013 ABINIT group (DCA, XG, FrD, GZ)
++!! Copyright (C) 1998-2012 ABINIT group (DCA, XG, FrD, GZ)
+ !! This file is distributed under the terms of the
+ !! GNU General Public License, see ~abinit/COPYING
+ !! or http://www.gnu.org/copyleft/gpl.txt .
+@@ -19,13 +19,19 @@
+ !!
+ !! INPUTS
+ !!  amesh=grid spacing for uniform (linear) radial grid
++!!  indlmn(6,i)= array giving l,m,n,lm,ln,s for i=ln  (if useylm=0)
++!!                                           or i=lmn (if useylm=1)
+ !!  lmax=maximum ang momentum for which nonlocal form factor is desired.
+ !!    lmax <= 2 allowed.
++!!  lmnmax=if useylm=1, max number of (l,m,n) comp. over all type of psps
++!!        =if useylm=0, max number of (l,n)   comp. over all type of psps
+ !!  lnmax=max. number of (l,n) components over all type of psps
+ !!  mmax=number of radial grid points for atomic grid
+-!!  mpsang= 1+maximum angular momentum for nonlocal pseudopotentials
+ !!  mqgrid=number of grid points for q grid
+-!!  nproj(mpsang)=number of projection functions for each angular momentum
++!!  pspso=spin-orbit characteristics, govern the content of ffspl and ekb
++!!   if =0 : this input requires NO spin-orbit characteristics of the psp
++!!   if =2 : this input requires HGH or psp8 characteristics of the psp
++!!   if =3 : this input requires HFN characteristics of the psp
+ !!  qgrid(mqgrid)=values at which form factors are returned
+ !!  rad(mmax)=radial grid values
+ !!  vpspll(mmax,lnmax)=nonlocal projectors for each (l,n) on linear
+@@ -64,7 +70,8 @@
+ 
+ #include "abi_common.h"
+ 
+-subroutine psp8nl(amesh,ffspl,lmax,lnmax,mmax,mpsang,mqgrid,nproj,qgrid,rad,vpspll)
++subroutine psp8nl(amesh,ffspl,indlmn,lmax,lmnmax,lnmax,mmax,&
++&                 mqgrid,qgrid,rad,vpspll)
+ 
+  use m_profiling
+ 
+@@ -83,10 +90,10 @@ subroutine psp8nl(amesh,ffspl,lmax,lnmax
+ 
+ !Arguments----------------------------------------------------------
+ !scalars
+- integer,intent(in) :: lmax,lnmax,mmax,mpsang,mqgrid
++ integer,intent(in) :: lmax,lmnmax,lnmax,mmax,mqgrid
+  real(dp),intent(in) :: amesh
+ !arrays
+- integer,intent(in) :: nproj(mpsang)
++ integer,intent(in) :: indlmn(6,lmnmax)
+  real(dp),intent(in) :: qgrid(mqgrid),rad(mmax),vpspll(mmax,lnmax)
+  real(dp),intent(out) :: ffspl(mqgrid,2,lnmax)
+ 
+@@ -95,7 +102,7 @@ subroutine psp8nl(amesh,ffspl,lmax,lnmax
+ !and represents the minimun number of integration points in one period.
+ !scalars
+  integer,parameter :: NPT_IN_2PI=200
+- integer :: iln0,ipsang,iq,ir,irmu,irn,jj,mesh_mult,mmax_new,mvpspll
++ integer :: iln,iln0,ilmn,iq,ir,irmu,irn,ll,mesh_mult,mmax_new,mvpspll
+  real(dp) :: amesh_new,arg,c1,c2,c3,c4,dri,qmesh,result,tv,xp,xpm1,xpm2,xpp1
+  real(dp) :: yp1,ypn
+ !arrays
+@@ -150,44 +157,45 @@ subroutine psp8nl(amesh,ffspl,lmax,lnmax
+      c3 = - xp * xpp1 * xpm2 * half
+      c4 = xp * xpp1 * xpm1 * sixth
+ !    Now do the interpolation on all projectors for this grid point
++
+      iln0=0
+-     do ipsang=1,lmax+1
+-       if(nproj(ipsang)>0) then
+-         do jj=iln0+1,iln0+nproj(ipsang)
+-           tv =  c1 * vpspll(ir - 1, jj) &
+-&           + c2 * vpspll(ir    , jj) &
+-&           + c3 * vpspll(ir + 1, jj) &
+-&           + c4 * vpspll(ir + 2, jj)
+-           if(abs(tv)>tol10) then
+-             vpspll_new(irn,jj)=tv
+-             mvpspll=irn
+-           else
+-             vpspll_new(irn,jj)=zero
+-           end if
+-         end do
+-         iln0=iln0+nproj(ipsang)
++     do ilmn=1,lmnmax
++       iln=indlmn(5,ilmn)
++       if (iln>iln0) then
++         iln0=iln
++         tv =  c1 * vpspll(ir - 1, iln) &
++  &       + c2 * vpspll(ir    , iln) &
++  &       + c3 * vpspll(ir + 1, iln) &
++  &       + c4 * vpspll(ir + 2, iln)
++         if(abs(tv)>tol10) then
++           vpspll_new(irn,iln)=tv
++           mvpspll=irn
++         else
++           vpspll_new(irn,iln)=zero
++         end if
+        end if
+      end do
++
+    else
+ !    With no mesh multiplication, just copy projectors
+      ir=irn
+      iln0=0
+-     do ipsang=1,lmax+1
+-       if(nproj(ipsang)>0) then
+-         do jj=iln0+1,iln0+nproj(ipsang)
+-           tv = vpspll(ir,jj)
+-           if(abs(tv)>tol10) then
+-             vpspll_new(irn,jj)=tv
+-             mvpspll=irn
+-           else
+-             vpspll_new(irn,jj)=zero
+-           end if
+-         end do
+-         iln0=iln0+nproj(ipsang)
++     do ilmn=1,lmnmax
++       iln=indlmn(5,ilmn)
++       if (iln>iln0) then
++         iln0=iln
++         tv = vpspll(ir,iln)
++         if(abs(tv)>tol10) then
++           vpspll_new(irn,iln)=tv
++           mvpspll=irn
++         else
++           vpspll_new(irn,iln)=zero
++         end if
+        end if
+      end do
++
+    end if
+- end do
++ end do !irn
+ 
+  ABI_ALLOCATE(work,(mvpspll,lnmax))
+ 
+@@ -199,50 +207,47 @@ subroutine psp8nl(amesh,ffspl,lmax,lnmax
+    do  ir=1,mvpspll
+      call sbf8(lmax+1,arg*rad_new(ir),sb_out)
+      iln0=0
+-     do ipsang=1,lmax+1
+-       if(nproj(ipsang)>0) then
+-         do jj=iln0+1,iln0+nproj(ipsang)
+-           work(ir,jj)=sb_out(ipsang)*vpspll_new(ir,jj)*rad_new(ir)
+-         end do
+-         iln0=iln0+nproj(ipsang)
++     do ilmn=1,lmnmax
++       iln=indlmn(5,ilmn)
++       if (iln>iln0) then
++         iln0=iln
++         ll=indlmn(1,ilmn)
++         work(ir,iln)=sb_out(ll+1)*vpspll_new(ir,iln)*rad_new(ir)
+        end if
+      end do
+-   end do
++   end do !ir
+ 
+ !  Do integral from zero to rad_new(mvpspll)
+    iln0=0
+-   do ipsang=1,lmax+1
+-     if(nproj(ipsang)>0) then
+-       do jj=iln0+1,iln0+nproj(ipsang)
+-         call ctrap(mvpspll,work(1,jj),amesh_new,result)
+-         ffspl(iq,1,jj)=result
+-       end do
+-       iln0=iln0+nproj(ipsang)
++   do ilmn=1,lmnmax
++     iln=indlmn(5,ilmn)
++     if (iln>iln0) then
++       iln0=iln
++       call ctrap(mvpspll,work(1,iln),amesh_new,result)
++       ffspl(iq,1,iln)=result
+      end if
+    end do
+ 
+ !  End loop over q mesh
+- end do
+-
++ end do !iq
+ 
+ !Fit splines for form factors
+  ABI_ALLOCATE(work2,(mqgrid))
+  qmesh=qgrid(2)-qgrid(1)
+- iln0=0
+- do ipsang=1,lmax+1
+-   if(nproj(ipsang)>0) then
+-     do jj=iln0+1,iln0+nproj(ipsang)
+-!      Compute derivatives of form factors at ends of interval
+-       yp1=(-50.d0*ffspl(1,1,jj)+96.d0*ffspl(2,1,jj)-72.d0*ffspl(3,1,jj)&
+-&       +32.d0*ffspl(4,1,jj)- 6.d0*ffspl(5,1,jj))/(24.d0*qmesh)
+-       ypn=(6.d0*ffspl(mqgrid-4,1,jj)-32.d0*ffspl(mqgrid-3,1,jj)&
+-&       +72.d0*ffspl(mqgrid-2,1,jj)-96.d0*ffspl(mqgrid-1,1,jj)&
+-&       +50.d0*ffspl(mqgrid,1,jj))/(24.d0*qmesh)
+ 
+-       call spline(qgrid,ffspl(1,1,jj),mqgrid,yp1,ypn,ffspl(1,2,jj))
++ iln0=0
++ do ilmn=1,lmnmax
++   iln=indlmn(5,ilmn)
++   if (iln>iln0) then
++     iln0=iln
++!    Compute derivatives of form factors at ends of interval
++     yp1=(-50.d0*ffspl(1,1,iln)+96.d0*ffspl(2,1,iln)-72.d0*ffspl(3,1,iln)&
++&     +32.d0*ffspl(4,1,iln)- 6.d0*ffspl(5,1,iln))/(24.d0*qmesh)
++     ypn=(6.d0*ffspl(mqgrid-4,1,iln)-32.d0*ffspl(mqgrid-3,1,iln)&
++&     +72.d0*ffspl(mqgrid-2,1,iln)-96.d0*ffspl(mqgrid-1,1,iln)&
++&     +50.d0*ffspl(mqgrid,1,iln))/(24.d0*qmesh)
+ 
+-     end do
+-     iln0=iln0+nproj(ipsang)
++     call spline(qgrid,ffspl(1,1,iln),mqgrid,yp1,ypn,ffspl(1,2,iln))
+    end if
+  end do
+ 
+diff -rupN src/65_psp/pspatm_abinit.F90 src_new/65_psp/pspatm_abinit.F90
+--- src/65_psp/pspatm_abinit.F90	2014-01-12 16:23:57.000000000 -0500
++++ src_new/65_psp/pspatm_abinit.F90	2014-02-13 09:09:48.000000000 -0500
+@@ -364,7 +364,7 @@ use m_pawxmlps,  only : paw_setup, ipsp2
+ !  Does required spin-orbit characteristics agree with format
+ !  (At present, only HGH and phoney pseudopotentials can have spin-orbit)
+ !  write(std_out,*) pspso
+-   if((pspcod/=3).and.(pspcod/=5).and.(pspcod/=10))then
++   if((pspcod/=3).and.(pspcod/=5).and.(pspcod/=8).and.(pspcod/=10))then
+ !    If pspso requires internal characteristics, set it to 1 for non-HGH psps
+      if(psps%pspso(ipsp)==1) psps%pspso(ipsp)=0
+      if(psps%pspso(ipsp)/=0)then
+@@ -513,8 +513,8 @@ use m_pawxmlps,  only : paw_setup, ipsp2
+ 
+ !    DRH pseudopotentials
+      call psp8in(ekb,epsatm,ffspl,indlmn,lloc,lmax,psps%lmnmax,psps%lnmax,mmax,&
+-&     psps%mpsang,psps%mqgrid_ff,nproj,psps%n1xccc,qchrg,psps%qgrid_ff,psps%useylm,vlspl,&
+-&     xcccrc,xccc1d,zion,psps%znuclpsp(ipsp))
++&     psps%mpsang,psps%mpssoang,psps%mqgrid_ff,nproj,psps%n1xccc,psps%pspso(ipsp),&
++&     qchrg,psps%qgrid_ff,psps%useylm,vlspl,xcccrc,xccc1d,zion,psps%znuclpsp(ipsp))
+ 
+    else if (pspcod==9)then
+ 

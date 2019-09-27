@@ -1,0 +1,89 @@
+cd src ; make all
+make[1]: Entering directory `/home/drh/oncvpsp-3.3.0/src'
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c oncvpsp.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c fphsft.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c fpovlp.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c gnu_script.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c linout.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c psatom.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c relatom.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c run_config.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c run_diag.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c run_phsft.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c run_plot.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c run_vkb.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c sratom.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c upfout.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c wellstate.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c aeo.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c check_data.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c const_basis.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c dpnint.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c eresid.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c exchdl.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c exc_off_pbe.f
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c excpzca.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c excwig.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c ldiracfb.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c ldiracfs.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c lschfb.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c lschfs.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c lschkb.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c lschpb.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c lschpse.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c lschps.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c lschvkbbe.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c lschvkbb.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c lschvkbs.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c modcore.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c optimize.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c pspot.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c qroots.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c run_optimize.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c sbf8.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c sbf_basis.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c sbf_rc_der.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c tfapot.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c vkboutwf.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c vkbphsft.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c vout.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c vpinteg.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c vploc.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c wf_rc_der.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c modcore2.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c gg1cc.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c gp1cc.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c gpp1cc.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c der2exc.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c modcore3.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c old_optimize.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c run_ghosts.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c lschpsbar.f90
+cpp -ansi -DLIBXC_VERSION=203   functionals.F90  > functionals_cpp.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -o functionals.o -c functionals_cpp.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c exc_libxc.f90
+gfortran -o oncvpsp.x oncvpsp.o fphsft.o fpovlp.o gnu_script.o linout.o psatom.o relatom.o run_config.o run_diag.o run_phsft.o run_plot.o run_vkb.o sratom.o upfout.o wellstate.o aeo.o check_data.o const_basis.o dpnint.o eresid.o exchdl.o exc_off_pbe.o excpzca.o excwig.o ldiracfb.o ldiracfs.o lschfb.o lschfs.o lschkb.o lschpb.o lschpse.o lschps.o lschvkbbe.o lschvkbb.o lschvkbs.o modcore.o optimize.o pspot.o qroots.o run_optimize.o sbf8.o sbf_basis.o sbf_rc_der.o tfapot.o vkboutwf.o vkbphsft.o vout.o vpinteg.o vploc.o wf_rc_der.o modcore2.o gg1cc.o gp1cc.o gpp1cc.o der2exc.o modcore3.o old_optimize.o run_ghosts.o lschpsbar.o functionals.o exc_libxc.o  -L/usr/local/lapack/lib -llapack -lrefblas -L/home/drh/abinit/fallbacks/exports/lib -lxcf90 -lxc
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c oncvpsp_nr.f90
+gfortran -o oncvpspnr.x oncvpsp_nr.o fphsft.o fpovlp.o gnu_script.o linout.o psatom.o relatom.o run_config.o run_diag.o run_phsft.o run_plot.o run_vkb.o sratom.o upfout.o wellstate.o aeo.o check_data.o const_basis.o dpnint.o eresid.o exchdl.o exc_off_pbe.o excpzca.o excwig.o ldiracfb.o ldiracfs.o lschfb.o lschfs.o lschkb.o lschpb.o lschpse.o lschps.o lschvkbbe.o lschvkbb.o lschvkbs.o modcore.o optimize.o pspot.o qroots.o run_optimize.o sbf8.o sbf_basis.o sbf_rc_der.o tfapot.o vkboutwf.o vkbphsft.o vout.o vpinteg.o vploc.o wf_rc_der.o modcore2.o gg1cc.o gp1cc.o gpp1cc.o der2exc.o modcore3.o old_optimize.o run_ghosts.o lschpsbar.o functionals.o exc_libxc.o  -L/usr/local/lapack/lib -llapack -lrefblas -L/home/drh/abinit/fallbacks/exports/lib -lxcf90 -lxc
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c oncvpsp_r.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c fphsft_r.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c fpovlp_r.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c gnu_script_r.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c linout_r.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c psatom_r.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c renorm_r.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c run_config_r.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c run_diag_r.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c run_diag_sr_so_r.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c run_phsft_r.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c run_plot_r.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c run_vkb_r.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c sr_so_r.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c upfout_r.f90
+gfortran -O3 -ffast-math -funroll-loops -I/home/drh/abinit/fallbacks/exports/include  -c wellstate_r.f90
+gfortran -o oncvpspr.x oncvpsp_r.o fphsft_r.o fpovlp_r.o gnu_script_r.o linout_r.o psatom_r.o relatom.o renorm_r.o run_config_r.o run_diag_r.o run_diag_sr_so_r.o run_phsft_r.o run_plot_r.o run_vkb_r.o sr_so_r.o upfout_r.o wellstate_r.o aeo.o check_data.o const_basis.o dpnint.o eresid.o exchdl.o exc_off_pbe.o excpzca.o excwig.o ldiracfb.o ldiracfs.o lschfb.o lschfs.o lschkb.o lschpb.o lschpse.o lschps.o lschvkbbe.o lschvkbb.o lschvkbs.o modcore.o optimize.o pspot.o qroots.o run_optimize.o sbf8.o sbf_basis.o sbf_rc_der.o tfapot.o vkboutwf.o vkbphsft.o vout.o vpinteg.o vploc.o wf_rc_der.o modcore2.o gg1cc.o gp1cc.o gpp1cc.o der2exc.o modcore3.o old_optimize.o run_ghosts.o lschpsbar.o functionals.o exc_libxc.o  -L/usr/local/lapack/lib -llapack -lrefblas -L/home/drh/abinit/fallbacks/exports/lib -lxcf90 -lxc
+make[1]: Leaving directory `/home/drh/oncvpsp-3.3.0/src'
+./set_path
+cd tests/data ; ./TEST.sh
+awk: cmd. line:1: fatal: cannot open file `/home/drh/oncvpsp-3.3.0/tests/refs/560_Nd_GHOST.out' for reading (No such file or directory)
+awk: cmd. line:1: fatal: cannot open file `/home/drh/oncvpsp-3.3.0/tests/data/560_Nd_GHOST.out' for reading (No such file or directory)

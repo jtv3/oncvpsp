@@ -1,0 +1,47 @@
+For 3.2.3, Ge and Hg now test the "both" option to generate both psp8 and
+upf files in the *.out file as discussed in the release notes.  The 
+corrections to icmod=2, 3, and 4 as discussed in the notes cause small
+changes in the model core charge listing and Teter analyses, and the new
+tests/refs reflect these changes.
+
+Note that for 3.2.1 the following files have been changed to test the
+new model core charge and wave function output features:
+
+    80_Hg.dat  (psfile = upf, relativistic)
+    79_Au.dat  (icmod = 2, relativistic)
+    34_Se.dat  (icmod = 3)
+    40_Zr.dat  (icmod = 4)
+
+Item 6 in the 3.2.1 release_notes motivated the following changes:
+
+    52_Te.dat  (lmax -> 3)
+    56_Ba.dat  (lmax -> 3)
+    
+
+These input files produce all the Vanderbilt 2-projector psps used in the
+paper.  K_st and Si_st correspond to K* and Si*.  The corresponding KB
+potentials can be produced by changing nproj to 1.
+
+Files for additional elements produce satisfactory-appearing pseudopotentials,
+but have not necessarily been tested for solids.
+
+All of these files run satisfactorily with ../run.sh (scalar-relativistic)
+and ../run_r.sh (fully relatiistic).  The relativistic (*_r.out) files
+have only been included in the refs for 52_Te 74_W, 79_Au and 80_Hg.
+
+The 83_Bi file uses iexc = -101130 (PBE) which is accepted for builds with
+the libxc library. It is equivalent to iexc = 4 (PBE) with the built-in exc 
+functions.  Running this when oncvpsp is built without libxc will exit with 
+an error message.
+
+Files beyond those in the paper have not necessarily been tested with 
+one KB projector.
+
+The 14_Si_UPF file produces PWSCF-compatible input which can be extracted
+from the 14_Si_UPF.out file with the ../extract.sh script.  The 52_Te
+data has been modified setting pspfile=upf to illustrate the relativistic
+form of upf data in the refs.
+
+The 60_Nd_GHOST.dat is simply to illustrate the 3.3.1 ghost detection
+capabilities.  Read doc/ghosts.txt for more details.  It should not be used
+in applicatiions without the modification discussed there.

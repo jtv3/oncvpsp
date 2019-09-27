@@ -1,0 +1,75 @@
+src/check_data.f90:  write(6,'(a,i4,a)') 'ERROR: test_data found',ierr,' errors; stopping'
+src/dpnint.f90:   write(6,'(/a,i6,a,i4)') 'dpnint: interpolation error, n=', &
+src/dpnint.f90:     write(6,'(/a)') 'dp3int: interpolation error - out of range'
+src/dpnint.f90:     write(6,'(/a)') 'dpnint: interpolation error - out of range'
+src/dpnint.f90:! error would not be acceptable If the fitted function is a polynomial
+src/functionals_cpp.f90:& stop 'error deriv_method not well defined'
+src/functionals_cpp.f90:stop 'error - parsing of xalpha coefficient not coded'
+src/functionals_cpp.f90:    if (.not. (size(v, dim=2) == functl%nspin)) stop 'error bad nspin definition'
+src/functionals_cpp.f90:    if (.not. (functional_kind(functl) /= XC_KINETIC)) stop 'error no kinetic functional here'
+src/functionals_cpp.f90:        stop 'error - no analytical derivatives coded'
+src/functionals_cpp.f90:stop 'error : meta GGA not coded yet '
+src/functionals_cpp.f90:    if (.not. (functional_kind(functl) == XC_KINETIC)) stop 'error no kinetic part here'
+src/ldiracfb.f90:!ierr  non-zero return if error
+src/ldiracfb.f90:  write(6,'(/a,i4,a,i4)') 'ldiracfb: error ll =',ll,' > nn =',nn
+src/ldiracfb.f90:  write(6,'(/a,i4,a,i4)') 'ldiracfb: error kap =',kap,' ll =',ll
+src/ldiracfb.f90:  write(6,'(/a,f12.8)') 'ldiracfb: error zz =',zz
+src/ldiracfs.f90:!ierr  non-zero return if error
+src/ldiracfs.f90:  write(6,'(/a,i4,a,i4)') 'ldiracfb: error kap =',kap,' ll =',ll
+src/ldiracfs.f90:  write(6,'(/a,f12.8)') 'ldiracfb: error zz =',zz
+src/lschfb.f90:!ierr  non-zero return if error
+src/lschfs.f90:!ierr  non-zero return if error
+src/lschkb.f90:!ierr  non-zero return if error
+src/lschpb.f90:!ierr  non-zero return if error
+src/lschpsbar.f90:!ierr  non-zero return if error
+src/lschpse.f90:!ierr  non-zero return if error
+src/lschps.f90:!ierr  non-zero return if error
+src/lschvkbbe.f90:!ierr  non-zero return if error
+src/lschvkbb.f90:!ierr  non-zero return if error
+src/modcore2.f90: write(6,'(/a,1p,e16.6)') 'rms 2nd derivative error',d2mdiff
+src/modcore2.f90: write(6,'(/a,1p,e16.6)') 'rms 2nd derivative error',d2mdiff
+src/modcore3.f90: write(6,'(/a,1p,e16.6)') 'rms 2nd derivative error',d2mdiff
+src/modcore3.f90: write(6,'(/a)') 'Coarse scan for minimum error'
+src/modcore3.f90: write(6,'(a)') '  matrix elements: rms 2nd-derivative errors (mHa)'
+src/modcore3.f90: write(6,'(/a,1p,e16.6)') 'rms 2nd derivative error',d2mdiff
+src/modcore.f90: write(6,'(/a,1p,e16.6)') 'rms 2nd derivative error',d2mdiff
+src/modcore.f90:&      'modcore:stop - dgesv input error',kk
+src/modcore.f90: write(6,'(/a,1p,e16.6)') 'rms 2nd derivative error',d2mdiff
+src/old_optimize.f90:  write(6,'(a,i4)') 'optimize: redisual-energy eigenvalue error, info=',info
+src/optimize.f90:  write(6,'(a,i4)') 'optimize: redisual-energy eigenvalue error, info=',info
+src/psatom.f90:       write(6,'(a,i4)') 'psatom: argument error - okb=',okb
+src/psatom.f90:       write(6,'(/a,4i4)') 'psatom: lschvkbb convergence error n,l,okb,iter=', &
+src/psatom_r.f90:        write(6,'(a,i4)') 'psatom: argument error - okb=',okb
+src/psatom_r.f90:       write(6,'(/a,4i4)') 'psatom: lschvkbb convergence error n,l,kap,iter=', &
+src/relatom.f90:!ierr  error flag
+src/relatom.f90:       write(6,'(/2a,4i4)') 'relatom: ldiracfb convergence error', &
+src/run_config.f90:    write(6,'(a,i4)') 'no classical turning point error, iteration',it
+src/run_config.f90: write(6,'(a,1p,d10.2)'), '      PSP excitation error=', &
+src/run_config_r.f90:    write(6,'(a,i4)') 'no classical turning point error, iteration',it
+src/run_config_r.f90: write(6,'(a,1p,d10.2)'), '      PSP excitation error=', &
+src/run_ghosts.f90:!Error for relativistic is B matrix Hermiticity error
+src/run_ghosts.f90:      write(6,'(/a,i4,a)') 'run_ghosts: lschpsbar error, ierr=',ierr, &
+src/run_ghosts.f90:      write(6,'(a,i4)') 'run_ghosts: hamiltonian matrix eigenvalue error, &
+src/run_ghosts.f90:         write(6,'(a,3i4,2f12.6)') 'run_ghosts: lschvkbb error', &
+src/run_optimize.f90:!cvgplt  energy error vs. cutoff energy for plotting
+src/run_optimize.f90: write(6,'(a,1p,d10.2,a,a,d10.2)') '    Residual KE error=', &
+src/run_optimize.f90: write(6,'(/a)') '    Energy error per electron        Cutoff'
+src/run_optimize.f90: write(6,'(a,1p,d10.2,a,a,d10.2)') '    Residual KE error=', &
+src/run_optimize.f90: write(6,'(/a)') '    Energy error per electron        Cutoff'
+src/run_plot.f90:!cvgplt  Energy per electron error vs. cutoff 
+src/run_plot_r.f90:!cvgplt  Energy per electron error vs. cutoff
+src/run_vkb.f90:&          'Hermiticity error',bb(1,2)-bb(2,1)
+src/run_vkb.f90:      write(6,'(a,i4)') 'run_vkb: B matrix eigenvalue error, info=',info
+src/run_vkb.f90:     write(6,'(a,i4)') 'run_vkb: sovl matrix eigenvalue error, info=',info
+src/run_vkb.f90:      write(6,'(a,i4)') 'run_vkb: B^(-1)* matrix eigenvalue error, info=',info
+src/run_vkb_r.f90:&          'Hermiticity error',bb(1,2)-bb(2,1),&
+src/run_vkb_r.f90:      write(6,'(a,i4)') 'run_vkb: B matrix eigenvalue error, info=',info
+src/run_vkb_r.f90:     write(6,'(a,i4)') 'run_vkb: sovl matrix eigenvalue error, info=',info
+src/run_vkb_r.f90:      write(6,'(a,i4)') 'run_vkb: B^(-1)* matrix eigenvalue error, info=',info
+src/sbf_basis.f90:  write(6,'(a,i4)') 'sbf_basis: overlap matrix eigenvalue error, info=',info
+src/sbf_rc_der.f90:  write(6,'(a,i4,a)') 'sbf_rc_der: argument error, llin = ',llin,&
+src/sratom.f90:!ierr  error flag
+src/sratom.f90:       write(6,'(/a,3i4)') 'sratom: lschfb convergence error n,l,iter=', &
+src/sr_so_r.f90:      write(6,'(a,i4)') 'sr_so_r: A* matrix eigenvalue error, info=',info
+src/wellstate.f90:    write(6,'(a,i3,a,i3)') 'wellstate: lschfb convergence error, n=',nn,' l=',ll
+src/wellstate_r.f90:    write(6,'(a,i3,a,i3)') 'wellstate: lschfb convergence error, n=',nn,' l=',ll
