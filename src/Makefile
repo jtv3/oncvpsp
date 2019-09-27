@@ -14,11 +14,11 @@ OBJS_ALL =	aeo.o check_data.o const_basis.o dpnint.o eresid.o exchdl.o \
 		sbf_rc_der.o tfapot.o vkboutwf.o vkbphsft.o vout.o vpinteg.o \
 		vploc.o wf_rc_der.o modcore2.o gg1cc.o gp1cc.o gpp1cc.o \
 		der2exc.o modcore3.o old_optimize.o run_ghosts.o \
-		lschpsbar.o
+		lschpsbar.o orthred.o write_proj.o getmeznl.o getfgnew.o core2core.o diagfg.o
 
 OBJS_NRSR =	fphsft.o fpovlp.o gnu_script.o linout.o psatom.o \
 		relatom.o run_config.o run_diag.o run_phsft.o run_plot.o \
-		run_vkb.o sratom.o upfout.o wellstate.o
+		run_vkb.o sratom.o upfout.o wellstate.o run_opf.o
 
 OBJS_SR =	oncvpsp.o
 

@@ -81,9 +81,28 @@
  n1 = idint(dlog(drl/rr(1))/al+1.0d0)
  n2 = idint(dlog(dfloat(nrl)*drl/rr(1))/al+1.0d0)
 
+ open(unit=99,file='ocean.mod',form='formatted')
+ if( lloc .eq. 4 ) then
+   write(99,*) lmax+1, mmax
+ else
+   write(99,*) lmax, mmax
+ endif
+ do ll = 0, lmax
+   write( 99, * ) ll
+   l1 = ll + 1
+   do ii=1,mmax
+     write(99, '(e23.16,1x,e23.16)' ) rr(ii), vpuns(ii,l1)
+   enddo
+ enddo
+ if( lloc .eq. 4 ) then
+   write(99,*) lmax+1
+   do ii=1,mmax
+     write(99, '(e23.16,1x,e23.16)' ) rr(ii), vpuns(ii,lloc+1)
+   enddo
+ endif
+ close( 99 )
 
  write(6,'(/2a/)') ' radii, charge,',' pseudopotentials (ll=0, 1, lmax)'
-
  do ii=n1,n2
    write(6,'(a,6(f12.7,1x))') '!p',rr(ii),rho(ii),(vpuns(ii,l1),l1=1,lmax+1)
  end do

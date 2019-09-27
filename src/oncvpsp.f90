@@ -208,6 +208,7 @@
  amesh=1.012d0
  al=dlog(amesh)
  rr1=.0005d0/zz
+! rr1=0.00000001d0/zz
  mmax=dlog(45.0d0 /rr1)/al
 
 !calculate zion for output
@@ -231,6 +232,8 @@
  do ii=1,mmax
   rr(ii)=rr1*exp(al*(ii-1))
  end do
+ !JTV
+ write(6,*) 'Grid report:', rr(1), rr(mmax)
 
 !
 ! full potential atom solution
@@ -614,6 +617,8 @@ allocate(uua(mmax,nv))
 
  call run_phsft(lmax,lloc,nproj,ep,epsh1,epsh2,depsh,vkb,evkb, &
 &               rr,vfull,vp,zz,mmax,irc,srel)
+ call run_opf(lmax,lloc,nproj,ep,epsh1,epsh2,depsh,vkb,evkb, &
+&               rr,vfull,vp,zz,mmax,irc,srel,nc,na,la,eacopy )
  
  call gnu_script(lmax,lloc,nproj,nxtra,lpx)
 
