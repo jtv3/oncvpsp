@@ -1,0 +1,5 @@
+*.o
+*genmod*
+*.mod
+*.x
+functionals_cpp.f90
