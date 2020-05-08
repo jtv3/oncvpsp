@@ -179,6 +179,26 @@
      ! refine search to use all-electron wave that matches pseudo version
 !     write(6,'(X,7(3X,A12))') 'diff', 'a1', 'a2', 'abest', 'e1', 'e2', 'ee' 
 
+
+     do kk = 1, 3
+       ee = ( e1 + e2 ) * .5_dp
+       ! get all-electron phase at this energy
+       call fphsft(ll,ee,depsh,singleps,rr,vfull,zz,mmax,irphs,1,srel)
+       !JTV do a better job aligning phase
+       do while ( singleps .lt. ( a1 - pi ) )
+         singleps = singleps + 2.0_dp * pi
+         if( singleps .gt. (a2+pi/2.0_dp) ) write(6,*) 'ERROR'
+       enddo
+
+       if( ( singleps - pshp( ii ) ) * ( pshp( ii ) - a2 ) .gt. 0.0_dp ) then
+         a1 = singleps
+         e1 = ee
+       else
+         a2 = singleps
+         e2 = ee
+       end if
+     enddo
+
      ! do a better check and exit here
      ! allow for more iterations but include an escape check when (pshp(ii) - singleps) < 1.0d-10 ?
      do kk = 1, 9
@@ -199,6 +219,9 @@
        if( qual ) then
          eebest = ee
          abest = singleps
+         if( abs( abest - pshp( ii ) ) .lt. 3.0d-14 ) then
+           exit
+         endif
        end if
 !       if( ii .eq. imin ) write(6,'(I0,7(3X,E12.6))') kk, abs(abest - pshp( ii )), a1, a2, abest, e1, e2, ee
 !       write(6,'(I1,7(3X,E12.5))') kk, abs(abest - pshp( ii )), a1, a2, abest, e1, e2, ee
@@ -210,6 +233,7 @@
          e2 = ee
        end if
      end do 
+!     write(6,*) 'BBB', pshp( ii )-abest, kk
          
      ! Now go ahead and get orbitals
      call lschfs(ll,ierr,eebest,rr,vfull,aeuu,aeup,zz,mmax,irphs,srel)
