@@ -53,7 +53,7 @@ subroutine orthred( nr, mmax, ntot, nnew, ll, rr, pheps, pheae, pspr, aepr, prec
         ar( i, j ) = -tmp
      end do
   end do
-  write ( 6, '(1a10,2(1x,1e15.8))' ) 'norm err =', err1, err2
+  write ( 6, '(1a17,2(1x,1e15.8))' ) 'OCEAN: norm err =', err1, err2
 
 
 !  call elsch( ntot, ntot, ar, ai, w, 1, zr, zi, fv1, fv2, fm1, ierr )
@@ -72,7 +72,7 @@ subroutine orthred( nr, mmax, ntot, nnew, ll, rr, pheps, pheae, pspr, aepr, prec
   call DSYEVR( 'V', 'I', 'U', ntot, ar, ntot, dumf, dumf, 1, maxopf, accuracy, navail, &
                eigenvalues, eigenvectors, ntot, isuppz, work, lwork, iwork, liwork, info )
   if( info .ne. 0 ) then
-    write(6,*) 'WARNING!!!! DSYEVR failed! ', info
+    write(6,*) 'OCEAN: WARNING!!!! DSYEVR failed! ', info
     ierr = info
     return
   endif
@@ -85,8 +85,9 @@ subroutine orthred( nr, mmax, ntot, nnew, ll, rr, pheps, pheae, pspr, aepr, prec
     nnew = nnew + 1
     su = su + abs(eigenvalues( i )/real(ntot,dp) ) 
   end do
-  write ( 6, '(6(1x,1e15.8))' ) eigenvalues( 1 : nnew )
-  write ( 6, '(2x,1a9,3(X,f10.4))' ) 'runsu = ', sum( eigenvalues( 1 : navail ) ), sum( eigenvalues( 1 : nnew )), su
+  write ( 6, '(A7,6(1x,1e15.8))' ) 'OCEAN: ', eigenvalues( 1 : nnew )
+  write ( 6, '(A7,2x,1a9,3(X,f10.4))' ) 'OCEAN: ', 'runsu = ', &
+                sum( eigenvalues( 1 : navail ) ), sum( eigenvalues( 1 : nnew )), su
   !
 !  err1 = 0.0d0; err2 = 0.d0; err3 = 0.0d0
 !  do i = 1, ntot
@@ -125,7 +126,7 @@ subroutine orthred( nr, mmax, ntot, nnew, ll, rr, pheps, pheae, pspr, aepr, prec
         err1 = max( err1, tmp1 ); err2 = max( err2, tmp2 )
      end do
   end do
-  write ( 6, '(1a20,2(1x,1e15.8))' ) 'new overlap error = ', err1, err2
+  write ( 6, '(1a28,2(1x,1e15.8))' ) 'OCEAN:  new overlap error = ', err1, err2
   !
   deallocate( eigenvectors, eigenvalues, isuppz, work, iwork, ar )
   return

@@ -95,13 +95,13 @@
        exit !quit loop, best radius found
      endif
    enddo
-   write( 6, * ) 'Using modified radius: ', rr( irphs ), rr( maxval( irc ) )
+   write( 6, * ) 'OCEAN: Using modified radius: ', rr( irphs ), rr( maxval( irc ) )
  endif
 
 ! loop for phase shift calculation -- full, then local or Kleinman-
 ! Bylander / Vanderbilt
  
- write(6,*) 'OPF SECTION', lmax
+ write(6,*) 'OCEAN: OPF SECTION', lmax
  npsh = 128
  allocate(pshf(npsh),pshp(npsh))
  allocate(phips(irphs,npsh),phirn(irphs,npsh),pspr(irphs,npsh),aepr(irphs,npsh))
@@ -113,7 +113,7 @@
  do l1 = 1, lmax+1
    epsh1 = ep( l1 ) - 0.3_dp
    depsh = (epsh2-epsh1)/real(npsh,dp)
-   write(6,'(I0,3(X,3E16.8))') l1-1, epsh1, epsh2, depsh
+   write(6,'(A7,I0,3(X,3E16.8))') 'OCEAN: ', l1-1, epsh1, epsh2, depsh
 
    ll = l1 - 1
 
@@ -148,9 +148,9 @@
    do ii = npsh, 1, -1
      if( pshp( ii ) .gt. pshf( 1 ) ) imin = ii
    end do
-   write(6,*) pshf(1), pshf(npsh)
-   write(6,*) pshp(1), pshp(npsh)
-   write(6,*) imin, imax, npsh
+   write(6,*) 'OCEAN: ', pshf(1), pshf(npsh)
+   write(6,*) 'OCEAN: ', pshp(1), pshp(npsh)
+   write(6,'(A7,3(X,I0))') 'OCEAN: ', imin, imax, npsh
    
    write(fnam,  '(A,I3.3,A,I1.1,A)') 'z', nint( zz ), 'l', ll, '.scat' 
    open(unit=98,file=fnam)
@@ -187,7 +187,7 @@
        !JTV do a better job aligning phase
        do while ( singleps .lt. ( a1 - pi ) )
          singleps = singleps + 2.0_dp * pi
-         if( singleps .gt. (a2+pi/2.0_dp) ) write(6,*) 'ERROR'
+         if( singleps .gt. (a2+pi/2.0_dp) ) write(6,*) 'OCEAN: ERROR'
        enddo
 
        if( ( singleps - pshp( ii ) ) * ( pshp( ii ) - a2 ) .gt. 0.0_dp ) then
@@ -208,7 +208,7 @@
        !JTV do a better job aligning phase
        do while ( singleps .lt. ( a1 - pi ) )
          singleps = singleps + 2.0_dp * pi
-         if( singleps .gt. (a2+pi/2.0_dp) ) write(6,*) 'ERROR'
+         if( singleps .gt. (a2+pi/2.0_dp) ) write(6,*) 'OCEAN: ERROR'
        enddo
 
        if( kk .eq. 1 ) then
@@ -289,7 +289,7 @@
      coree = ea(ic)
      call lschfb(na(ic),la(ic),ierr,coree,rr,vfull,coreuu(:,ic),coreup,zz,mmax,mch,srel)
 
-     write(6,'(3(I2,X),F20.12,X,F20.12)') ic, na(ic), la(ic), ea(ic),coree
+     write(6,'(A7,3(I2,X),F20.12,X,F20.12)') 'OCEAN: ', ic, na(ic), la(ic), ea(ic),coree
 
      write( fnam,  '(1a8,1i3.3,2(1a1,1i2.2))' ) 'coreorbz', nint( zz ), 'n', na( ic ), 'l', la( ic )
      open( unit=99, file=fnam, form='formatted', status='unknown' )

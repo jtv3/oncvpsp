@@ -65,7 +65,7 @@
  nud = nopf * ( nopf + 1 )
  nud = nud / 2
 
- write(6,*) nud, irc
+ write(6,*) 'OCEAN: ', nud, irc
  allocate( afk( nud, irc ), agk( nud, irc ) )
  do kk = 0, 2 * max( lc, ll )
 
