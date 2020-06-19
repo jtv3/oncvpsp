@@ -59,7 +59,7 @@
 !Output variables - printing only
 
 !Local variables
- integer :: ii,ll,l1,npsh,jj,imax,imin,j1,j2,kk,ierr,nopf,mch,ic,l2,iii
+ integer :: ii,ll,l1,npsh,jj,imax,imin,j1,j2,kk,ierr,nopf,mch,ic,l2,iii,iskip
  real(dp) :: epsh,singleps,e1,e2,a1,a2,eebest,ee,sca,abest,coree
  logical :: qual
  character(len=20 ) :: fnam
@@ -141,6 +141,7 @@
    ! is greater than pshf(1) cycle
 
    ! The ordering of the energies is from highest to lowest
+   iskip = 0
    imin = 1
    do ii = 1, npsh
      if( pshp( ii ) .lt. pshf( npsh ) ) imax = ii
@@ -242,10 +243,16 @@
 
      ! Because of number of node mismatches, there may be a sign difference in the derivatives of psi
      ! between the pseudo and all-electron, but sca should be ~+1 so go ahead and take the abs( )
-     sca = abs( ( pshp( ii )**2 + psup(irphs)**2 ) / ( pshp( ii ) * abest + psup(irphs) * aeup(irphs) ) )
-!!     if( ii .eq. imin ) write(6,'(A,5(X,E12.6))') 'SCA', sca, abest, pshp( ii ), psup(irphs), aeup(irphs)
-!      write(6,'(A,1(X,E12.5))') 'SCA', sca
-!!     sca = 1.0_dp
+!     sca = abs( ( pshp( ii )**2 + psup(irphs)**2 ) / ( pshp( ii ) * abest + psup(irphs) * aeup(irphs) ) )
+
+     sca = abs( ( psuu(irphs)**2 + psup(irphs)**2 ) / ( psuu(irphs)*aeuu(irphs) + psup(irphs) * aeup(irphs) ) )
+
+     if( ( sca - 1.0_dp ) .gt. 0.05_dp ) then 
+        write(6,*) 'LARGE scaling factor!!', ll, ii-imin+1-iskip
+        write(6,'(4(E26.15))') pshp( ii ), abest, psup(irphs), aeup(irphs)
+        iskip = iskip + 1
+        cycle
+     endif
 
      ! Apparently need to check to make sure the signs are in agreement. Might be missing node in search range?
      do iii = irphs, 1, -1
@@ -255,16 +262,16 @@
        endif
      enddo
 
-     phirn( :, ii - imin + 1) = aeuu( : ) * sca
-     phips( :, ii - imin + 1) = psuu( : )
+     phirn( :, ii - imin + 1 - iskip ) = aeuu( : ) * sca
+     phips( :, ii - imin + 1 - iskip ) = psuu( : )
 
-     write(fnam, '(A,I3.3,A,I1.1,A,I4.4)') 'z', nint( zz ), 'l', ll, '.', imax - ii + 1
+     write(fnam, '(A,I3.3,A,I1.1,A,I4.4)') 'z', nint( zz ), 'l', ll, '.', ii - imin + 1 - iskip
      open(file=fnam, unit=99, form='formatted', status='unknown' )
      write(99,*) '#', epsh
      write(98,*)
      do jj = 1, irphs
-       write(99,*) rr(jj), phips(jj,ii), phirn(jj,ii)
-       write(98,*) rr(jj), phips(jj,ii), phirn(jj,ii)
+       write(99,*) rr(jj), phips(jj,ii-imin+1-iskip), phirn(jj,ii-imin+1-iskip)
+       write(98,*) rr(jj), phips(jj,ii-imin+1-iskip), phirn(jj,ii-imin+1-iskip)
      end do
      write(98,*)
      close(99)
@@ -276,7 +283,7 @@
 
    ! Principle-component analysis of the set of scattering waves (N = imax-imin+1 )
    ! prec sets the eigenvalue threshold. Should be based on basis size?
-   call orthred( irphs, mmax, imax-imin+1, nopf, ll, rr, phips, phirn, pspr, aepr, prec, maxopf, ierr )
+   call orthred( irphs, mmax, imax-imin+1-iskip, nopf, ll, rr, phips, phirn, pspr, aepr, prec, maxopf, ierr )
 
    if( ierr .ne. 0 ) return
 
