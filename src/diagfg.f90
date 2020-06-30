@@ -15,9 +15,9 @@
 ! along with this program.  If not, see <http://www.gnu.org/licenses/>.
 !
 !
-! Give the various matrix elements as a function of cur-off radius
+! Give the various matrix elements as a function of cut-off radius
 !
- subroutine diagfg( zz, nn, lc, ll, irc, nopf,  rr, coreuu, aepr  )
+ subroutine diagfg( zz, nn, lc, ll, irc, nopf,  rr, coreuu, aepr, scfac  )
 
 !zz  atomic number
 !nn principle quantum number
@@ -28,6 +28,7 @@
 !rr  log radial grid
 !coreuu core level orbital
 !aepr all-electron opfs
+!scfac is scaling factor for fk/gk
 
  implicit none
  integer, parameter :: dp=kind(1.0d0)
@@ -38,6 +39,7 @@
  real(dp),intent(in) :: zz
  real(dp),intent(in) :: rr(irc),coreuu(irc)
  real(dp),intent(in) :: aepr(irc,nopf)
+ real(dp),intent(in) :: scfac
 
 !Output variables 
 
@@ -152,7 +154,7 @@
      do i2 = 1, nopf
         write ( 99, '(9f8.2)' ) ff( :, i2 )
      end do
-     write(99,*) 0.80
+     write(99,*) scfac
      close( unit=99 )
 
      write( filnam18, '(1a2,5i1,a)') 'fk', lc, ll, kk, nn, lc, 'diagnose' 
@@ -174,7 +176,7 @@
        do i2 = 1, nopf
           write ( 99, '(9f8.2)' ) gg( :, i2 )
        end do
-       write(99,*) 0.80
+       write(99,*) scfac
        close( unit=99 )
 
        write( filnam18, '(1a2,5i1,a)') 'gk', lc, ll, kk, nn, lc, 'diagnose' 

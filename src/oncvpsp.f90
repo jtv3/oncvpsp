@@ -56,6 +56,7 @@
  real(dp) :: rr1,rcion,rciont,rcmax,rct,rlmax,rpkt
  real(dp) :: sf,zz,zion,zval,etot
  real(dp) :: xdummy
+ real(dp) :: targRad,scfac
 !
  real(dp) :: cl(6),evkb(2,4),debl(6),ea(30),eacopy(30),ep(6),fa(30),facnf(30,5)
  real(dp) :: fnp(6),fp(6)
@@ -80,7 +81,7 @@
  character*2 :: atsym
  character*4 :: psfile
 
- logical :: srel
+ logical :: srel, ocean
 
  write(6,'(a/a//)') &
 &      'ONCVPSP  (Optimized Norm-Conservinng Vanderbilt PSeudopotential)', &
@@ -172,6 +173,12 @@
      call read_error(ios,inline)
    end do
  end do
+
+ read(5,*,iostat=ios) ocean
+ if( ios/= 0 ) ocean = .false.
+ if( ocean ) then
+   read(5,*) targRad, scfac
+ endif
 
 ! end of reading input data
 
@@ -617,8 +624,12 @@ allocate(uua(mmax,nv))
 
  call run_phsft(lmax,lloc,nproj,ep,epsh1,epsh2,depsh,vkb,evkb, &
 &               rr,vfull,vp,zz,mmax,irc,srel)
- call run_opf(lmax,lloc,nproj,ep,epsh1,epsh2,depsh,vkb,evkb, &
-&               rr,vfull,vp,zz,mmax,irc,srel,nc,na,la,eacopy )
+
+ if( ocean ) then
+   call run_opf(lmax,lloc,nproj,ep,epsh1,epsh2,depsh,vkb,evkb, &
+&               rr,vfull,vp,zz,mmax,irc,srel,nc,na,la,eacopy, &
+&               targRad,scfac)
+ endif
  
  call gnu_script(lmax,lloc,nproj,nxtra,lpx)
 

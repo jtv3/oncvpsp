@@ -17,7 +17,8 @@
 ! along with this program.  If not, see <http://www.gnu.org/licenses/>.
 !
  subroutine run_opf(lmax,lloc,nproj,ep,epsh1,epsh2,depsh,vkb,evkb, &
-&                     rr,vfull,vp,zz,mmax,irc,srel,nc,na,la,ea)
+&                     rr,vfull,vp,zz,mmax,irc,srel,nc,na,la,ea, &
+&                   targRad,scfac)
 
 ! computes the OPFs and writes them to file
 
@@ -55,6 +56,8 @@
  integer,intent(in) :: nc
  integer,intent(in) :: na(nc),la(nc)
  real(dp),intent(in) :: ea(nc)
+ real(dp),intent(in) :: targRad
+ real(dp),intent(in) :: scfac
 
 !Output variables - printing only
 
@@ -75,16 +78,15 @@
  integer,parameter :: maxopf = 16
 
  integer :: irphs
- real(dp) :: targRad
- logical :: ex
 
  irphs = maxval( irc + 2 )
 
- inquire( file='overrideRadius', exist=ex )
- if( ex ) then
-   open( unit=99, file='overrideRadius', form='formatted', status='old' )
-   read( 99, * ) targRad
-   close( 99 )
+! inquire( file='overrideRadius', exist=ex )
+! if( ex ) then
+!   open( unit=99, file='overrideRadius', form='formatted', status='old' )
+!   read( 99, * ) targRad
+!   close( 99 )
+ if( targRad > rr(irphs) ) then
    do ii = 2, mmax
      if( rr( ii ) .gt. targRad ) then
        if( ( targRad - rr( ii - 1 ) ) .lt. ( rr( ii ) - targRad ) ) then
@@ -310,7 +312,7 @@
      call getmeznl( zz, na(ic), la(ic), irphs, nopf, maxopf, rr, coreuu(:,ic), aepr, mels(:,:,ll,ic) )
 
      call getfgnew( zz, na(ic), la(ic), ll, irphs, nopf, rr, coreuu(:,ic), aepr )
-     call diagfg( zz, na(ic), la(ic), ll, irphs, nopf, rr, coreuu(:,ic), aepr )
+     call diagfg( zz, na(ic), la(ic), ll, irphs, nopf, rr, coreuu(:,ic), aepr, scfac )
 
      call core2core( nc, ic, zz, na, la, mmax, irphs, rr, coreuu )
 
