@@ -61,15 +61,15 @@
 
 !Output variables - printing only
 
-!Local variables
- integer :: ii,ll,l1,npsh,jj,imax,imin,j1,j2,kk,ierr,nopf,mch,ic,l2,iii,iskip
+!Local variables,ls,nmax
+ integer :: ii,ll,l1,npsh,jj,imax,imin,j1,j2,kk,ierr,nopf,mch,ic,l2,iii,iskip,ls,nmax
  real(dp) :: epsh,singleps,e1,e2,a1,a2,eebest,ee,sca,abest,coree
  logical :: qual
  character(len=20 ) :: fnam
 
  real(dp),allocatable :: pshf(:),pshp(:),aeuu(:),aeup(:),psuu(:),psup(:),coreuu(:,:),coreup(:)
  real(dp),allocatable :: phips(:,:), phirn(:,:),pspr(:,:),aepr(:,:)
- real(dp),allocatable :: mels(:,:,:,:)
+ real(dp),allocatable :: mels(:,:,:,:),semimels(:,:,:,:)
  integer, allocatable :: nopfs(:)
 
  real(dp), parameter :: pi=3.141592653589793238462643383279502884197_dp
@@ -109,7 +109,7 @@
  allocate(phips(irphs,npsh),phirn(irphs,npsh),pspr(irphs,npsh),aepr(irphs,npsh))
  allocate(aeuu(mmax),aeup(mmax),psuu(mmax),psup(mmax),coreuu(mmax,nc),coreup(mmax))
 
- allocate( mels(maxopf,0:3,0:lmax,nc), nopfs(0:lmax) )
+ allocate( mels(maxopf,0:3,0:lmax,nc), nopfs(0:lmax),semimels(maxopf,0:3,0:lmax,0:lmax) )
 
  epsh2 = 5.0_DP
  do l1 = 1, lmax+1
@@ -264,8 +264,8 @@
        endif
      enddo
 
-     phirn( :, ii - imin + 1 - iskip ) = aeuu( : ) * sca
-     phips( :, ii - imin + 1 - iskip ) = psuu( : )
+     phirn( 1 : irphs , ii - imin + 1 - iskip ) = aeuu( 1 : irphs ) * sca
+     phips( 1 : irphs , ii - imin + 1 - iskip ) = psuu( 1 : irphs)
 
      write(fnam, '(A,I3.3,A,I1.1,A,I4.4)') 'z', nint( zz ), 'l', ll, '.', ii - imin + 1 - iskip
      open(file=fnam, unit=99, form='formatted', status='unknown' )
@@ -314,10 +314,14 @@
      call getfgnew( zz, na(ic), la(ic), ll, irphs, nopf, rr, coreuu(:,ic), aepr )
      call diagfg( zz, na(ic), la(ic), ll, irphs, nopf, rr, coreuu(:,ic), aepr, scfac )
 
+
      call core2core( nc, ic, zz, na, la, mmax, irphs, rr, coreuu )
 
    enddo
+   call semicore( zz, nc, na, la, ll, lmax, irphs, nopf, maxopf, rr, coreuu(:,:), aepr, semimels(:,:,:,:) )
+   call projso( zz, ll, irphs, mmax, nopf, rr, vfull, aepr )
  end do
+
 
  do ic = 1, nc
    write( fnam, '(1a7,1a1,1i3.3,1a1,1i2.2,1a1,1i2.2)' ) 'melfile', 'z', nint( zz ), 'n', na(ic), 'l', la(ic)
@@ -331,6 +335,27 @@
    end do
    close( 99 )
  end do
+
+ do ls = 0, lmax
+   nmax = ls
+   do ic = 1, nc        
+     if( la(ic) .eq. ls ) then
+       nmax = max( nmax, na(ic) )
+     endif
+   enddo
+   nmax = nmax + 1
+   write( fnam, '(1a7,1a1,1i3.3,1a1,1i2.2,1a1,1i2.2)' ) 'melsemi', 'z', nint( zz ), 'n', nmax, 'l', ls
+   open(unit=99, file=fnam, form='formatted', status='unknown' )
+   rewind 99
+   write ( 99, '(1i5)' ) 3
+   do ll=0,lmax
+     do ii = 0,3
+       write(99,'(4(1x,1e15.8))' ) semimels( 1:nopfs(ll),ii,ll,ls)
+     end do
+   end do
+   close( 99 )
+ end do
+
 
  write(fnam, '(A,I3.3)') 'prjfilez', nint(zz )
  open(unit=99, file=fnam, form='formatted', status='unknown' )
