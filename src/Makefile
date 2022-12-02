@@ -18,7 +18,7 @@ OBJS_ALL =	aeo.o check_data.o const_basis.o dpnint.o eresid.o exchdl.o \
 
 OBJS_NRSR =	fphsft.o fpovlp.o gnu_script.o linout.o psatom.o \
 		relatom.o run_config.o run_diag.o run_phsft.o run_plot.o \
-		run_vkb.o sratom.o upfout.o wellstate.o run_opf.o
+		run_vkb.o sratom.o upfout.o wellstate.o run_opf.o writeorb.o semicore.o
 
 OBJS_SR =	oncvpsp.o
 

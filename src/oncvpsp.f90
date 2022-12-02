@@ -46,6 +46,7 @@
  integer :: irc(6),nodes(4)
  integer :: ncut,nxtra,nproj(6),npx(6),lpx(6)
  integer :: ncon(6),nbas(6)
+ integer :: opf_lpad, opf_lmax_absolute
 
  real(dp) :: al,amesh,csc,csc1,deblt,depsh,depsht,drl,eeel
  real(dp) :: eeig,eexc
@@ -178,6 +179,11 @@
  if( ios/= 0 ) ocean = .false.
  if( ocean ) then
    read(5,*) targRad, scfac
+   read(5,*,iostat=ios) opf_lpad, opf_lmax_absolute
+   if( ios /= 0 ) then
+     opf_lpad = 0
+     opf_lmax_absolute = 5
+   endif 
  endif
 
 ! end of reading input data
@@ -416,6 +422,8 @@
 &       np(l1),'  l=',ll
        stop
      end if
+     write(6,*) rr(1)
+     call writeorb( 'semi', zz, np(l1), ll, rr(:), uu(:), mmax )
    else
      call wellstate(np(l1),ll,irc(l1),ep(l1),rr,vfull,uu,up,zz,mmax,mch,srel)
    end if
@@ -628,7 +636,8 @@ allocate(uua(mmax,nv))
  if( ocean ) then
    call run_opf(lmax,lloc,nproj,ep,epsh1,epsh2,depsh,vkb,evkb, &
 &               rr,vfull,vp,zz,mmax,irc,srel,nc,na,la,eacopy, &
-&               targRad,scfac)
+&               targRad,scfac,opf_lpad,opf_lmax_absolute)
+
  endif
  
  call gnu_script(lmax,lloc,nproj,nxtra,lpx)

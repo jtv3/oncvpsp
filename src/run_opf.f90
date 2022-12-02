@@ -18,7 +18,7 @@
 !
  subroutine run_opf(lmax,lloc,nproj,ep,epsh1,epsh2,depsh,vkb,evkb, &
 &                     rr,vfull,vp,zz,mmax,irc,srel,nc,na,la,ea, &
-&                   targRad,scfac)
+&                   targRad,scfac,opf_lpad,opf_lmax_absolute)
 
 ! computes the OPFs and writes them to file
 
@@ -58,12 +58,13 @@
  real(dp),intent(in) :: ea(nc)
  real(dp),intent(in) :: targRad
  real(dp),intent(in) :: scfac
+ integer :: opf_lpad,opf_lmax_absolute
 
 !Output variables - printing only
 
 !Local variables,ls,nmax
- integer :: ii,ll,l1,npsh,jj,imax,imin,j1,j2,kk,ierr,nopf,mch,ic,l2,iii,iskip,ls,nmax
- real(dp) :: epsh,singleps,e1,e2,a1,a2,eebest,ee,sca,abest,coree
+ integer :: ii,ll,l1,npsh,jj,imax,imin,j1,j2,kk,ierr,nopf,mch,ic,l2,iii,iskip,ls,nmax,lmax_opf
+ real(dp) :: epsh,singleps,e1,e2,a1,a2,eebest,ee,sca,abest,coree,ep_opf(8)
  logical :: qual
  character(len=20 ) :: fnam
 
@@ -73,7 +74,7 @@
  integer, allocatable :: nopfs(:)
 
  real(dp), parameter :: pi=3.141592653589793238462643383279502884197_dp
- real(dp), parameter :: prec = 0.001_dp
+ real(dp), parameter :: prec = 0.0001_dp
  real(dp), parameter :: tol = 0.001_dp
  integer,parameter :: maxopf = 16
 
@@ -100,19 +101,43 @@
    write( 6, * ) 'OCEAN: Using modified radius: ', rr( irphs ), rr( maxval( irc ) )
  endif
 
+ allocate(aeuu(mmax),aeup(mmax),psuu(mmax),psup(mmax),coreuu(mmax,nc),coreup(mmax))
+ do ic=1,nc
+   coree = ea(ic)
+   call lschfb(na(ic),la(ic),ierr,coree,rr,vfull,coreuu(:,ic),coreup,zz,mmax,mch,srel)
+   write(6,'(A7,3(I2,X),F20.12,X,F20.12)') 'OCEAN: ', ic, na(ic), la(ic), ea(ic),coree
+   do ii = irphs, mmax
+     call vpinteg( coreuu(:,ic), coreuu(:,ic), ii, la(ic), sca, rr )
+     write(6,'(A,2I4,2F20.14)') 'OCEAN', na(ic), la(ic), sca, rr(ii)
+!     if( sca > 0.999999_DP ) then
+     if( sca > 0.0_DP ) then
+       irphs = ii
+       exit
+     endif
+   enddo
+ enddo
+   
+
 ! loop for phase shift calculation -- full, then local or Kleinman-
 ! Bylander / Vanderbilt
+
+ lmax_opf = lmax
+ if( opf_lpad > 0 ) then
+   lmax_opf = min( lmax+opf_lpad ,opf_lmax_absolute )
+ endif
  
- write(6,*) 'OCEAN: OPF SECTION', lmax
+ write(6,*) 'OCEAN: OPF SECTION', lmax, lmax_opf
  npsh = 128
  allocate(pshf(npsh),pshp(npsh))
  allocate(phips(irphs,npsh),phirn(irphs,npsh),pspr(irphs,npsh),aepr(irphs,npsh))
- allocate(aeuu(mmax),aeup(mmax),psuu(mmax),psup(mmax),coreuu(mmax,nc),coreup(mmax))
 
- allocate( mels(maxopf,0:3,0:lmax,nc), nopfs(0:lmax),semimels(maxopf,0:3,0:lmax,0:lmax) )
+ allocate( mels(maxopf,0:3,0:lmax_opf,nc), nopfs(0:lmax_opf),semimels(maxopf,0:3,0:lmax_opf,0:lmax_opf) )
+
+! ep_opf(:) = 0.0_DP
+! ep_opf(1:lmax+1) = opf(1:lmax+1)
 
  epsh2 = 5.0_DP
- do l1 = 1, lmax+1
+ do l1 = 1, lmax_opf+1
    epsh1 = ep( l1 ) - 0.3_dp
    depsh = (epsh2-epsh1)/real(npsh,dp)
    write(6,'(A7,I0,3(X,3E16.8))') 'OCEAN: ', l1-1, epsh1, epsh2, depsh
@@ -120,10 +145,10 @@
    ll = l1 - 1
 
    ! Only need the phase shifts for the all-electron to start
-   call fphsft(ll,epsh2,depsh,pshf,rr,vfull,zz,mmax,irphs,npsh,srel)
+   call fphsft(ll,epsh2,depsh,pshf(1),rr,vfull,zz,mmax,irphs,npsh,srel)
 
    ! TESTING
-   if(ll .eq. lloc) then  
+   if(ll .eq. lloc .or. ll .gt. lmax) then  
      call  vkbphsft(ll,0,epsh2,depsh,ep(l1),pshf,pshp, &
 &                   rr,vp(1,lloc+1),vkb(1,1,l1),evkb(1,l1), &
 &                   mmax,irphs,npsh)
@@ -295,10 +320,10 @@
 
    ! Calculate and write out the 
    do ic=1,nc
-     coree = ea(ic)
-     call lschfb(na(ic),la(ic),ierr,coree,rr,vfull,coreuu(:,ic),coreup,zz,mmax,mch,srel)
+!     coree = ea(ic)
+!     call lschfb(na(ic),la(ic),ierr,coree,rr,vfull,coreuu(:,ic),coreup,zz,mmax,mch,srel)
 
-     write(6,'(A7,3(I2,X),F20.12,X,F20.12)') 'OCEAN: ', ic, na(ic), la(ic), ea(ic),coree
+!     write(6,'(A7,3(I2,X),F20.12,X,F20.12)') 'OCEAN: ', ic, na(ic), la(ic), ea(ic),coree
 
      write( fnam,  '(1a8,1i3.3,2(1a1,1i2.2))' ) 'coreorbz', nint( zz ), 'n', na( ic ), 'l', la( ic )
      open( unit=99, file=fnam, form='formatted', status='unknown' )
@@ -318,7 +343,7 @@
      call core2core( nc, ic, zz, na, la, mmax, irphs, rr, coreuu )
 
    enddo
-   call semicore( zz, nc, na, la, ll, lmax, irphs, nopf, maxopf, rr, coreuu(:,:), aepr, semimels(:,:,:,:) )
+   call semicore( zz, nc, na, la, ll, lmax_opf, irphs, nopf, maxopf, rr, coreuu(:,:), aepr, semimels(:,:,:,:) )
    call projso( zz, ll, irphs, mmax, nopf, rr, vfull, aepr )
  end do
 
@@ -328,7 +353,7 @@
    open(unit=99, file=fnam, form='formatted', status='unknown' )
    rewind 99
    write ( 99, '(1i5)' ) 3
-   do ll=0,lmax
+   do ll=0,lmax_opf
      do ii = 0,3
        write(99,'(4(1x,1e15.8))' ) mels( 1:nopfs(ll),ii,ll,ic)
      end do
@@ -336,7 +361,7 @@
    close( 99 )
  end do
 
- do ls = 0, lmax
+ do ls = 0, lmax_opf  
    nmax = ls
    do ic = 1, nc        
      if( la(ic) .eq. ls ) then
@@ -348,7 +373,7 @@
    open(unit=99, file=fnam, form='formatted', status='unknown' )
    rewind 99
    write ( 99, '(1i5)' ) 3
-   do ll=0,lmax
+   do ll=0,lmax_opf
      do ii = 0,3
        write(99,'(4(1x,1e15.8))' ) semimels( 1:nopfs(ll),ii,ll,ls)
      end do
@@ -360,8 +385,8 @@
  write(fnam, '(A,I3.3)') 'prjfilez', nint(zz )
  open(unit=99, file=fnam, form='formatted', status='unknown' )
  ! FIX nq, dq
- write( 99, '(3i5,2x,1e15.8)' ) 0, lmax, 401, 0.05_dp
- do ll=0,lmax
+ write( 99, '(3i5,2x,1e15.8)' ) 0, lmax_opf, 401, 0.05_dp
+ do ll=0,lmax_opf
    write(99, '(1i5)' ) nopfs(ll)
  end do
  close( 99 )
