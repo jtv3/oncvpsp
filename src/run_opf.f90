@@ -344,7 +344,7 @@
 
    enddo
    call semicore( zz, nc, na, la, ll, lmax_opf, irphs, nopf, maxopf, rr, coreuu(:,:), aepr, semimels(:,:,:,:) )
-   call projso( zz, ll, irphs, mmax, nopf, rr, vfull, aepr )
+!   call projso( zz, ll, irphs, mmax, nopf, rr, vfull, aepr )
  end do
 
 
