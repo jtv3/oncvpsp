@@ -93,6 +93,8 @@
 &      'suggested that you cite D. R. Hamann, Phys. Rev. B 88, 085117 (2013)', &
 &      'in any publication utilizing these pseudopotentials.'
 
+ write(6,'(a//)') '   This version modified for use with the OCEAN code (mod version 4)'
+
  srel=.true.
 
  nproj(:)=0
@@ -637,6 +639,7 @@ allocate(uua(mmax,nv))
    call run_opf(lmax,lloc,nproj,ep,epsh1,epsh2,depsh,vkb,evkb, &
 &               rr,vfull,vp,zz,mmax,irc,srel,nc,na,la,eacopy, &
 &               targRad,scfac,opf_lpad,opf_lmax_absolute)
+!   call print_vloc(mmax,rr,vp(:,lloc+1), vpuns(:,lloc+1))
 
  endif
  
