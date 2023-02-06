@@ -248,7 +248,7 @@
   rr(ii)=rr1*exp(al*(ii-1))
  end do
  !JTV
- write(6,*) 'Grid report:', rr(1), rr(mmax)
+! write(6,*) 'Grid report:', rr(1), rr(mmax)
 
 !
 ! full potential atom solution
@@ -424,8 +424,10 @@
 &       np(l1),'  l=',ll
        stop
      end if
-     write(6,*) rr(1)
-     call writeorb( 'semi', zz, np(l1), ll, rr(:), uu(:), mmax )
+     if( ocean ) then
+       write(6,*) rr(1)
+       call writeorb( 'semi', zz, np(l1), ll, rr(:), uu(:), mmax )
+     endif
    else
      call wellstate(np(l1),ll,irc(l1),ep(l1),rr,vfull,uu,up,zz,mmax,mch,srel)
    end if
