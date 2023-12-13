@@ -642,7 +642,7 @@ allocate(uua(mmax,nv))
 &               rr,vfull,vp,zz,mmax,irc,srel,nc,na,la,eacopy, &
 &               targRad,scfac,opf_lpad,opf_lmax_absolute)
 !   call print_vloc(mmax,rr,vp(:,lloc+1), vpuns(:,lloc+1))
-
+   call run_corehole( rr,zz,mmax,srel,nc,nv,na,la,ea,fa,iexc )
  endif
  
  call gnu_script(lmax,lloc,nproj,nxtra,lpx)
