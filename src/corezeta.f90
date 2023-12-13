@@ -32,6 +32,7 @@ subroutine corezeta( rr,zz,mmax,nc,nv,na,la,fa,iexc )
  real(dp) :: e1, e2
  integer :: ii
  character(len=1) :: symb(0:3) = (/ 's', 'p', 'd', 'f' /)
+ character(len=12) :: filename
 
 
  allocate( rho(mmax), rhoc(mmax), vi(mmax) )
@@ -39,7 +40,8 @@ subroutine corezeta( rr,zz,mmax,nc,nv,na,la,fa,iexc )
  call relatom(na,la,ea,fa,rpk,nc, nc+nv, it, rhoc, rho, &
               rr, vi, zz, mmax, iexc, etot, ierr )
 
- open(unit=99,file='xifile',form='formatted',status='unknown')
+ write(filename,'(A9,I3.3)') 'corezetaz', int(zz)
+ open(unit=99,file=filename,form='formatted',status='unknown')
  do ii = 1, nc+nv
    if( la(ii) .eq. 0 ) then
      e1 = 0.0_DP
