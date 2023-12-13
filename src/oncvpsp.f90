@@ -93,7 +93,7 @@
 &      'suggested that you cite D. R. Hamann, Phys. Rev. B 88, 085117 (2013)', &
 &      'in any publication utilizing these pseudopotentials.'
 
- write(6,'(a//)') '   This version modified for use with the OCEAN code (mod version 4)'
+ write(6,'(a//)') '   This version modified for use with the OCEAN code (mod version 5)'
 
  srel=.true.
 
@@ -643,6 +643,8 @@ allocate(uua(mmax,nv))
 &               targRad,scfac,opf_lpad,opf_lmax_absolute)
 !   call print_vloc(mmax,rr,vp(:,lloc+1), vpuns(:,lloc+1))
    call run_corehole( rr,zz,mmax,srel,nc,nv,na,la,ea,fa,iexc,.false. )
+
+   call corezeta( rr,zz,mmax,nc,nv,na,la,fa,iexc )
  endif
  
  call gnu_script(lmax,lloc,nproj,nxtra,lpx)
