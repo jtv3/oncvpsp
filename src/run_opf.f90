@@ -292,16 +292,16 @@
      phirn( 1 : irphs , ii - imin + 1 - iskip ) = aeuu( 1 : irphs ) * sca
      phips( 1 : irphs , ii - imin + 1 - iskip ) = psuu( 1 : irphs)
 
-     write(fnam, '(A,I3.3,A,I1.1,A,I4.4)') 'z', nint( zz ), 'l', ll, '.', ii - imin + 1 - iskip
-     open(file=fnam, unit=99, form='formatted', status='unknown' )
-     write(99,*) '#', epsh
+!     write(fnam, '(A,I3.3,A,I1.1,A,I4.4)') 'z', nint( zz ), 'l', ll, '.', ii - imin + 1 - iskip
+!     open(file=fnam, unit=99, form='formatted', status='unknown' )
+!     write(99,*) '#', epsh
      write(98,*)
      do jj = 1, irphs
-       write(99,*) rr(jj), phips(jj,ii-imin+1-iskip), phirn(jj,ii-imin+1-iskip)
+!       write(99,*) rr(jj), phips(jj,ii-imin+1-iskip), phirn(jj,ii-imin+1-iskip)
        write(98,*) rr(jj), phips(jj,ii-imin+1-iskip), phirn(jj,ii-imin+1-iskip)
      end do
      write(98,*)
-     close(99)
+!     close(99)
 
    end do
 
