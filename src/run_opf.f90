@@ -18,7 +18,7 @@
 !
  subroutine run_opf(lmax,lloc,nproj,ep,epsh1,epsh2,depsh,vkb,evkb, &
 &                     rr,vfull,vp,zz,mmax,irc,srel,nc,na,la,ea, &
-&                   targRad,scfac,opf_lpad,opf_lmax_absolute)
+&                   targRad,scfac,opf_lpad,opf_lmax_absolute,fa,ncv, iexc)
 
 ! computes the OPFs and writes them to file
 
@@ -54,22 +54,24 @@
  real(dp),intent(in) :: vfull(mmax),vkb(mmax,2,4),evkb(2,4)
  logical,intent(in) :: srel
  integer,intent(in) :: nc
- integer,intent(in) :: na(nc),la(nc)
- real(dp),intent(in) :: ea(nc)
+ integer,intent(in) :: na(ncv),la(ncv)
+ real(dp),intent(in) :: ea(ncv)
  real(dp),intent(in) :: targRad
  real(dp),intent(in) :: scfac
  integer :: opf_lpad,opf_lmax_absolute
+ integer, intent(in) :: ncv, iexc
+ real(dp), intent(in) :: fa(ncv)
 
 !Output variables - printing only
 
 !Local variables,ls,nmax
- integer :: ii,ll,l1,npsh,jj,imax,imin,j1,j2,kk,ierr,nopf,mch,ic,l2,iii,iskip,ls,nmax,lmax_opf
+ integer :: ii,ll,l1,jj,imax,imin,j1,j2,kk,ierr,nopf,mch,ic,l2,iii,iskip,ls,nmax,lmax_opf
  real(dp) :: epsh,singleps,e1,e2,a1,a2,eebest,ee,sca,abest,coree,ep_opf(8)
  logical :: qual
  character(len=20 ) :: fnam
 
  real(dp),allocatable :: pshf(:),pshp(:),aeuu(:),aeup(:),psuu(:),psup(:),coreuu(:,:),coreup(:)
- real(dp),allocatable :: phips(:,:), phirn(:,:),pspr(:,:),aepr(:,:)
+ real(dp),allocatable :: phips(:,:), phirn(:,:),pspr(:,:),aepr(:,:), aeprojectors(:,:,:)
  real(dp),allocatable :: mels(:,:,:,:),semimels(:,:,:,:)
  integer, allocatable :: nopfs(:)
 
@@ -77,8 +79,14 @@
  real(dp), parameter :: prec = 0.0001_dp
  real(dp), parameter :: tol = 0.001_dp
  integer,parameter :: maxopf = 16
+ integer,parameter :: npsh = 128
 
  integer :: irphs
+
+ logical :: run_somewhat_rel = .false.
+ real(dp), allocatable :: rel_ea(:,:), rel_rpk(:,:), rel_rho(:), rel_rhoc(:), rel_vi(:), rel_coreuu(:,:), rel_coreup(:,:)
+ real(dp) :: etot
+ integer :: it, kap
 
  irphs = maxval( irc + 2 )
 
@@ -127,14 +135,25 @@
  endif
  
  write(6,*) 'OCEAN: OPF SECTION', lmax, lmax_opf
- npsh = 128
  allocate(pshf(npsh),pshp(npsh))
  allocate(phips(irphs,npsh),phirn(irphs,npsh),pspr(irphs,npsh),aepr(irphs,npsh))
 
  allocate( mels(maxopf,0:3,0:lmax_opf,nc), nopfs(0:lmax_opf),semimels(maxopf,0:3,0:lmax_opf,0:lmax_opf) )
+ allocate( aeprojectors(irphs,maxopf,0:lmax_opf) )
 
 ! ep_opf(:) = 0.0_DP
 ! ep_opf(1:lmax+1) = opf(1:lmax+1)
+
+ if( run_somewhat_rel ) then
+
+    write(6,*) 'OCEAN: ', 'Running relativistic atom'
+    allocate( rel_ea( ncv, 2 ), rel_rpk( ncv, 2 ), rel_rho( mmax ), rel_rhoc( mmax ), rel_vi( mmax ), &
+              rel_coreuu( mmax, 2 ), rel_coreup(mmax,2) )
+    write(6,*) 'OCEAN: ', 'Running relativistic atom'
+    call relatom( na, la, rel_ea, fa, rel_rpk, nc, ncv, it, rel_rhoc, rel_rho, rr, rel_vi, zz, mmax, iexc, etot, ierr )
+    write(6,*) 'OCEAN: ', 'Relativistic total energy ', etot
+
+ endif
 
  epsh2 = 5.0_DP
  do l1 = 1, lmax_opf+1
@@ -317,6 +336,8 @@
    ! Subroutine to write out the projectors
    call write_proj( irphs, mmax, nopf, zz, ll, rr, pspr, aepr )
    nopfs(ll) = nopf
+   aeprojectors(:,1:nopf,ll) = aepr(:,1:nopf)
+
 
    ! Calculate and write out the 
    do ic=1,nc
@@ -325,14 +346,27 @@
 
 !     write(6,'(A7,3(I2,X),F20.12,X,F20.12)') 'OCEAN: ', ic, na(ic), la(ic), ea(ic),coree
 
+     if( run_somewhat_rel ) then
+        kap = -(la(ic) + 1 )
+        coree = rel_ea( ic, 1 )
+        call ldiracfb( na( ic ), la( ic ), kap, ierr, coree, rr, zz, rel_vi, rel_coreuu,rel_coreup, mmax, mch )
+        write(6,*) 'OCEAN: ', 'TEST: ', rel_ea( ic, 1 ), coree, rel_ea( ic, 2 )
+     endif
+
      write( fnam,  '(1a8,1i3.3,2(1a1,1i2.2))' ) 'coreorbz', nint( zz ), 'n', na( ic ), 'l', la( ic )
      open( unit=99, file=fnam, form='formatted', status='unknown' )
      rewind 99
      write ( 99, '(1a1,1i8)' ) '#', irphs
      do ii = 1, irphs
-        write ( 99, '(2(1x,1e22.15))' ) rr( ii ), coreuu( ii, ic )
+        if( run_somewhat_rel ) then
+          write ( 99, '(4(1x,1e22.15))' ) rr( ii ), coreuu( ii, ic ), rel_coreuu( ii, 1 ), rel_coreuu( ii, 2 )
+        else
+          write ( 99, '(2(1x,1e22.15))' ) rr( ii ), coreuu( ii, ic )
+        endif
      end do
      close( unit=99 )
+
+     if( run_somewhat_rel ) coreuu(:,ic) = rel_coreuu(:,1)
 
      call getmeznl( zz, na(ic), la(ic), irphs, nopf, maxopf, rr, coreuu(:,ic), aepr, mels(:,:,ll,ic) )
 
@@ -347,6 +381,7 @@
 !   call projso( zz, ll, irphs, mmax, nopf, rr, vfull, aepr )
  end do
 
+ call extendedfg( zz, nc, na, la, lmax_opf, maxopf, nopfs, mmax, irphs, rr, coreuu, aeprojectors )
 
  do ic = 1, nc
    write( fnam, '(1a7,1a1,1i3.3,1a1,1i2.2,1a1,1i2.2)' ) 'melfile', 'z', nint( zz ), 'n', na(ic), 'l', la(ic)
@@ -391,10 +426,11 @@
  end do
  close( 99 )
 
+  if(  run_somewhat_rel) deallocate( rel_ea, rel_rpk, rel_rho, rel_rhoc, rel_vi, rel_coreuu, rel_coreup )
 
  deallocate(aeuu,aeup,psuu,psup)
  deallocate(pshf,pshp)
- deallocate(phips,phirn,pspr,aepr,coreuu,coreup)
+ deallocate(phips,phirn,pspr,aepr,coreuu,coreup,aeprojectors)
  deallocate(mels)
  return
  end subroutine run_opf

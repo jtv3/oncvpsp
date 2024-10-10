@@ -640,7 +640,7 @@ allocate(uua(mmax,nv))
  if( ocean ) then
    call run_opf(lmax,lloc,nproj,ep,epsh1,epsh2,depsh,vkb,evkb, &
 &               rr,vfull,vp,zz,mmax,irc,srel,nc,na,la,eacopy, &
-&               targRad,scfac,opf_lpad,opf_lmax_absolute)
+&               targRad,scfac,opf_lpad,opf_lmax_absolute,fa,nv+nc,iexc)
 !   call print_vloc(mmax,rr,vp(:,lloc+1), vpuns(:,lloc+1))
    call run_corehole( rr,zz,mmax,srel,nc,nv,na,la,ea,fa,iexc,.false. )
 
