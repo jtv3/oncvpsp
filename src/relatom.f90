@@ -53,7 +53,7 @@
 !Output variables
  integer :: it,ierr
  real(dp) :: etot
- real(dp) :: ea(30,2),rpk(30,2)
+ real(dp) :: ea(ncv,2),rpk(ncv,2)
  real(dp) :: rho(mmax),rhoc(mmax),vi(mmax)
 
 !Local function
