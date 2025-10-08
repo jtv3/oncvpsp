@@ -25,9 +25,9 @@ subroutine corezeta( rr,zz,mmax,nc,nv,na,la,fa,iexc )
  real(dp),intent(in) :: fa(nc+nv)
 
 
- real(dp) :: ea(30,2), rpk(30,2), etot
+ real(dp) :: etot
  integer :: it, ierr
- real(dp), allocatable :: rho(:), rhoc(:), vi(:)
+ real(dp), allocatable :: rho(:), rhoc(:), vi(:), ea(:,:), rpk(:,:)
 
  real(dp) :: e1, e2
  integer :: ii
@@ -35,7 +35,7 @@ subroutine corezeta( rr,zz,mmax,nc,nv,na,la,fa,iexc )
  character(len=12) :: filename
 
 
- allocate( rho(mmax), rhoc(mmax), vi(mmax) )
+ allocate( rho(mmax), rhoc(mmax), vi(mmax), ea(nc+nv,2), rpk(nc+nv,2) )
  
  call relatom(na,la,ea,fa,rpk,nc, nc+nv, it, rhoc, rho, &
               rr, vi, zz, mmax, iexc, etot, ierr )
@@ -50,11 +50,11 @@ subroutine corezeta( rr,zz,mmax,nc,nv,na,la,fa,iexc )
    endif
    e1 = e1 * 2.0_dp / dble( 2 * la( ii ) + 1 )
    e2 = e1 * Ryd2eV * 2.0_dp !* 4.0d0 / dble( 2 * la( ii ) + 1 )
-   write(99,'(F20.11,X,F20.11,XI1,A1)') e2, e1, na(ii), symb(la(ii))
-   write(6,'(A,X,F20.11,X,F20.11,XI1,A1)') 'OCEAN SO', e2, e1, na(ii), symb(la(ii))
+   write(99,'(F20.11,X,F20.11,X,I1,A1)') e2, e1, na(ii), symb(la(ii))
+   write(6,'(A,X,F20.11,X,F20.11,X,I1,A1)') 'OCEAN SO', e2, e1, na(ii), symb(la(ii))
  enddo
  close(99)
 
- deallocate( rho, rhoc, vi )
+ deallocate( rho, rhoc, vi, ea, rpk )
 
 end subroutine corezeta
