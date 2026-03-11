@@ -114,7 +114,24 @@
     write(99,'(4E24.15)') rr(jj), vo2(jj) - vo(jj)
    enddo
    close(99)
+
+
+   tmp_fa(1:nc+nv) = fa(1:nc+nv)
+   call sratom(na,la,ea,tmp_fa,rpk,nc,nc+nv,it,rhoc,rho,rr,vfull,zz,mmax,iexc,etot,ierr,srel)
+   call voutHartree(rhoc,vo,rr,mmax,sume)
+
+   tmp_fa(ii) = tmp_fa(ii)-1.0_DP
+   call sratom(na,la,ea,tmp_fa,rpk,nc,nc+nv,it,rhoc,rho,rr,vfull,zz,mmax,iexc,etot2,ierr,srel)
+   call voutHartree(rhoc,vo2,rr,mmax,sume-1.0_DP)
     
+
+   write(6,*) 'OCEAN ---', etot, etot2, it
+   write(filename, '(A8,I3.3,A1,I2.2,A1,I2.2)' ) 'vcallelz', int(zz), 'n', na(ii), 'l', la(ii )
+   open(file=filename, unit=99, form='formatted' )
+   do jj = 1, mmax
+     write(99,'(4E24.15)') rr(jj), vo2(jj) - vo(jj)
+   enddo
+   close(99)
 
  enddo
 

@@ -40,11 +40,13 @@
 !Output variables 
 
 !Local variables
- integer :: kk,ii,i1,i2,k1,ic,l1,l2,lc
+ integer :: kk,ii,i1,i2,k1,ic,l1,l2,lc,lmaxf,lmaxg
  real(dp) :: tmp,s11,s23,s12,s13,dl,rp
  real(dp),allocatable :: ff(:,:),gg(:,:)
  real(dp),allocatable :: v11(:),v12(:),v23(:),v13(:)
  character(len=18) :: filnam18
+
+ logical :: dogg, doff
 
 ! Remove later and write these in Ha. to leave all eV conversion in ocean.x
  real(dp),parameter :: ehart = 27.21138506_DP
@@ -63,114 +65,122 @@
 ! Probably could be re-arranged to be better about re-using things
   do ic = 1, nc
     lc = la(ic)
-    do kk = 0, lc+lmax_opf
-      do l1 = 0, lmax_opf
-        do l2 = l1, lmax_opf
+    do l1 = 0, lmax_opf
+      do l2 = 0, l1
+        ! For exchange, the max is the smaller of (lc+l1),(lc+l2)
+        ! For direct, the max is the smaller of 2*lc,l1+l2
+        lmaxf = min( 2 * lc, l1+l2)
+        lmaxg = min( lc+l1, lc+l2)
+        do kk = 0, max(lmaxf,lmaxg)
+!        do kk = 0, max(2*lc, 2*lmax_opf)
           ! Enforce 3j selection rules
           ! 1. |lc-l| <= k
           ! 2. k <= (lc+l)
           ! 3. lc+l+k = even integer
-          if( abs(lc-l1) .gt. kk ) cycle
-          if( abs(lc-l2) .gt. kk ) cycle
-          if( lc+l1 .lt. kk ) cycle
-          if( lc+l2 .lt. kk ) cycle
-          if( mod(lc+l1+kk,2) .ne. 0 ) cycle
-          if( mod(lc+l2+kk,2) .ne. 0 ) cycle
+          dogg = .true.
+          doff = .true.
+
+          if( ( abs(lc-l1) .gt. kk ) .or. ( abs(lc-l2) .gt. kk ) .or. (lc+l1 .lt. kk ) & 
+             .or. (lc+l2 .lt. kk ) .or. ( mod(lc+l1+kk,2) .ne. 0 ) .or. ( mod(lc+l2+kk,2) .ne. 0 ) ) then
+            dogg = .false.
+          endif
+          if( ( abs(l1-l2) .gt. kk ) .or. ( l1+l2 .lt. kk ) .or. (lc+lc .lt. kk )  &
+            .or. (mod(kk,2) .ne. 0 ) .or. mod(l1+l2,2) .ne. 0 ) then
+            doff = .false.
+          endif
+          write(6,*) 'ZZZZ', lc, l1, l2, kk, dogg, doff
+          if( (.not. doff ) .and. ( .not. dogg ) ) cycle
 
           allocate( ff(nopfs(l1),nopfs(l2)), gg(nopfs(l1),nopfs(l2)) )
 
-   do i1 = 1, nopfs(l1)
-     do i2 = 1, nopfs(l2)
-       !
-       v11( : ) = 0.0_dp; v23( : ) = 0.0_dp; v12( : ) = 0.0_dp; v13( : ) = 0.0_dp
-       s11 = 0; s23 = 0; s12 = 0; s13 = 0
-       do ii = irc - 1, 1, -1
-         tmp = 0.5_dp * dl * rr( ii ) / rr( ii ) ** ( kk + 1 )
-         s11 = s11 + tmp * coreuu( ii, ic ) * coreuu( ii, ic )
-         s23 = s23 + tmp * aepr( ii, i1, l1 ) * aepr( ii, i2, l2 )
-         s12 = s12 + tmp * coreuu( ii, ic ) * aepr( ii, i1, l1 )
-         s13 = s13 + tmp * coreuu( ii, ic ) * aepr( ii, i2, l2 )
-         tmp = 0.5_dp * dl * rr( ii + 1 ) / rr( ii + 1 ) ** ( kk + 1 )
-         s11 = s11 + tmp * coreuu( ii + 1, ic ) * coreuu( ii + 1, ic )
-         s23 = s23 + tmp * aepr( ii + 1, i1, l1 ) * aepr( ii + 1, i2, l2 )
-         s12 = s12 + tmp * coreuu( ii + 1, ic ) * aepr( ii + 1, i1, l1 )
-         s13 = s13 + tmp * coreuu( ii + 1, ic ) * aepr( ii + 1, i2, l2 )
-         rp = rr( ii ) ** kk
-         if ( rp .gt. 0.0_dp ) then
-           v11( ii ) = s11 * rp
-           v23( ii ) = s23 * rp
-           v12( ii ) = s12 * rp
-           v13( ii ) = s13 * rp
-         end if
-       end do
-       s11 = 0; s23 = 0; s12 = 0; s13 = 0
-       do ii = 2, irc
-         tmp = 0.5_dp * dl * rr( ii - 1 ) * rr( ii - 1 ) ** kk
-         s11 = s11 + tmp * coreuu( ii - 1, ic ) * coreuu( ii - 1, ic )
-         s23 = s23 + tmp * aepr( ii - 1, i1, l1 ) * aepr( ii - 1, i2, l2 )
-         s12 = s12 + tmp * coreuu( ii - 1, ic ) * aepr( ii - 1, i1, l1 )
-         s13 = s13 + tmp * coreuu( ii - 1, ic ) * aepr( ii - 1, i2, l2 )
-         tmp = 0.5_dp * dl * rr( ii ) * rr( ii ) ** kk
-         s11 = s11 + tmp * coreuu( ii, ic ) * coreuu( ii, ic )
-         s23 = s23 + tmp * aepr( ii, i1, l2 ) * aepr( ii, i2, l2 )
-         s12 = s12 + tmp * coreuu( ii, ic ) * aepr( ii, i1, l1 )
-         s13 = s13 + tmp * coreuu( ii, ic ) * aepr( ii, i2, l2 )
-         rp = rr( ii ) ** ( kk + 1 )
-         if ( rp .gt. 0.0_dp ) then
-           v11( ii ) = v11( ii ) + s11 / rp
-           v23( ii ) = v23( ii ) + s23 / rp
-           v12( ii ) = v12( ii ) + s12 / rp
-           v13( ii ) = v13( ii ) + s13 / rp
-         end if
-       end do
-       !
-       s11 = 0; s23 = 0; s12 = 0; s13 = 0
-       do ii = 1, irc
-         tmp = dl * rr( ii )
-         if ( ( ii .eq. 1 ) .or. ( ii .eq. irc ) ) tmp = 0.5_dp * tmp
-         s11 = s11 + tmp * v23( ii ) * coreuu( ii, ic ) * coreuu( ii, ic )
-         s23 = s23 + tmp * v11( ii ) * aepr( ii, i1, l1 ) * aepr( ii, i2, l2 )
-         s12 = s12 + tmp * v13( ii ) * coreuu( ii, ic ) * aepr( ii, i1, l1 )
-         s13 = s13 + tmp * v12( ii ) * coreuu( ii, ic ) * aepr( ii, i2, l2 )
-       end do
-       !
-       ff( i1, i2 ) = 0.5_dp * ( s11 + s23 ) * ehart
-       gg( i1, i2 ) = 0.5_dp * ( s12 + s13 ) * ehart
-       !
-     end do
-   end do
+          do i1 = 1, nopfs(l1)
+            do i2 = 1, nopfs(l2)
+              !
+              v11( : ) = 0.0_dp; v23( : ) = 0.0_dp; v12( : ) = 0.0_dp; v13( : ) = 0.0_dp
+              s11 = 0; s23 = 0; s12 = 0; s13 = 0
+              do ii = irc - 1, 1, -1
+                tmp = 0.5_dp * dl * rr( ii ) / rr( ii ) ** ( kk + 1 )
+                s11 = s11 + tmp * coreuu( ii, ic ) * coreuu( ii, ic )
+                s23 = s23 + tmp * aepr( ii, i1, l1 ) * aepr( ii, i2, l2 )
+                s12 = s12 + tmp * coreuu( ii, ic ) * aepr( ii, i1, l1 )
+                s13 = s13 + tmp * coreuu( ii, ic ) * aepr( ii, i2, l2 )
+                tmp = 0.5_dp * dl * rr( ii + 1 ) / rr( ii + 1 ) ** ( kk + 1 )
+                s11 = s11 + tmp * coreuu( ii + 1, ic ) * coreuu( ii + 1, ic )
+                s23 = s23 + tmp * aepr( ii + 1, i1, l1 ) * aepr( ii + 1, i2, l2 )
+                s12 = s12 + tmp * coreuu( ii + 1, ic ) * aepr( ii + 1, i1, l1 )
+                s13 = s13 + tmp * coreuu( ii + 1, ic ) * aepr( ii + 1, i2, l2 )
+                rp = rr( ii ) ** kk
+                if ( rp .gt. 0.0_dp ) then
+                  v11( ii ) = s11 * rp
+                  v23( ii ) = s23 * rp
+                  v12( ii ) = s12 * rp
+                  v13( ii ) = s13 * rp
+                end if
+              end do
+              s11 = 0; s23 = 0; s12 = 0; s13 = 0
+              do ii = 2, irc
+                tmp = 0.5_dp * dl * rr( ii - 1 ) * rr( ii - 1 ) ** kk
+                s11 = s11 + tmp * coreuu( ii - 1, ic ) * coreuu( ii - 1, ic )
+                s23 = s23 + tmp * aepr( ii - 1, i1, l1 ) * aepr( ii - 1, i2, l2 )
+                s12 = s12 + tmp * coreuu( ii - 1, ic ) * aepr( ii - 1, i1, l1 )
+                s13 = s13 + tmp * coreuu( ii - 1, ic ) * aepr( ii - 1, i2, l2 )
+                tmp = 0.5_dp * dl * rr( ii ) * rr( ii ) ** kk
+                s11 = s11 + tmp * coreuu( ii, ic ) * coreuu( ii, ic )
+                s23 = s23 + tmp * aepr( ii, i1, l2 ) * aepr( ii, i2, l2 )
+                s12 = s12 + tmp * coreuu( ii, ic ) * aepr( ii, i1, l1 )
+                s13 = s13 + tmp * coreuu( ii, ic ) * aepr( ii, i2, l2 )
+                rp = rr( ii ) ** ( kk + 1 )
+                if ( rp .gt. 0.0_dp ) then
+                  v11( ii ) = v11( ii ) + s11 / rp
+                  v23( ii ) = v23( ii ) + s23 / rp
+                  v12( ii ) = v12( ii ) + s12 / rp
+                  v13( ii ) = v13( ii ) + s13 / rp
+                end if
+              end do
+              !
+              s11 = 0; s23 = 0; s12 = 0; s13 = 0
+              do ii = 1, irc
+                tmp = dl * rr( ii )
+                if ( ( ii .eq. 1 ) .or. ( ii .eq. irc ) ) tmp = 0.5_dp * tmp
+                s11 = s11 + tmp * v23( ii ) * coreuu( ii, ic ) * coreuu( ii, ic )
+                s23 = s23 + tmp * v11( ii ) * aepr( ii, i1, l1 ) * aepr( ii, i2, l2 )
+                s12 = s12 + tmp * v13( ii ) * coreuu( ii, ic ) * aepr( ii, i1, l1 )
+                s13 = s13 + tmp * v12( ii ) * coreuu( ii, ic ) * aepr( ii, i2, l2 )
+              end do
+              !
+              ff( i1, i2 ) = 0.5_dp * ( s11 + s23 ) * ehart
+              gg( i1, i2 ) = 0.5_dp * ( s12 + s13 ) * ehart
+              !
+            end do
+          end do
 
-!   if( mod(kk,2) .eq. 0 .and. kk .le. 2*min(ll,lc) ) then
-!     write ( filnam18, '(1a2,3i1,1a1,1i3.3,1a1,1i2.2,1a1,1i2.2)' ) 'fk', lc, ll, kk, 'z', nint( zz ), 'n', nn, 'l', lc
-!     open( unit=99, file=filnam18, form='formatted', status='unknown' )
-!     rewind 99
-!     do i2 = 1, nopf
-!        write ( 99, '(9f8.2)' ) ff( :, i2 )
-!     end do
-!     write(99,*) 0.80
-!     close( unit=99 )
-!   end if
+          if( dogg ) then
+            write ( filnam18, '(1a2,4i1,1a1,1i3.3,1a1,1i2.2,1a1,1i2.2)' ) 'gk', lc, l1, l2, kk, 'z', nint( zz ), 'n', na(ic), 'l', la(ic)
+            open( unit=99, file=filnam18, form='formatted', status='unknown' )
+            rewind 99
+            do i2 = 1, nopfs(l2)
+               write ( 99, '(9f10.4)' ) gg( :, i2 )
+            end do
+            write(99,*) 1.0_DP
+            close( unit=99 )
+          endif
 
-!   do k1 = abs( ll - lc ), ll + lc, 2
-!     if ( k1 .eq. kk ) then
-       write ( filnam18, '(1a2,4i1,1a1,1i3.3,1a1,1i2.2,1a1,1i2.2)' ) 'gk', lc, l1, l2, kk, 'z', nint( zz ), 'n', na(ic), 'l', la(ic)
-       open( unit=99, file=filnam18, form='formatted', status='unknown' )
-       rewind 99
-       do i2 = 1, nopfs(l2)
-          write ( 99, '(9f10.4)' ) gg( :, i2 )
-       end do
-       write(99,*) 0.80
-       close( unit=99 )
-!     end if
+          if( doff ) then
+            write ( filnam18, '(1a2,4i1,1a1,1i3.3,1a1,1i2.2,1a1,1i2.2)' ) 'fk', lc, l1, l2, kk, 'z', nint( zz ), 'n', na(ic), 'l', la(ic)
+            open( unit=99, file=filnam18, form='formatted', status='unknown' )
+            rewind 99
+            do i2 = 1, nopfs(l2)
+               write ( 99, '(9f10.4)' ) ff( :, i2 )
+            end do
+            write(99,*) 1.0_DP
+            close( unit=99 )
+          endif
       
-         deallocate( ff, gg )
-       enddo ! l2
-     enddo !l1
-   enddo !kk
- enddo ! ic
-
-!   enddo
-! end do
+          deallocate( ff, gg )
+        enddo ! l2
+      enddo !l1
+    enddo !kk
+  enddo ! ic
 
  deallocate(v11,v12,v13,v23)
 

@@ -29,7 +29,7 @@ subroutine corezeta( rr,zz,mmax,nc,nv,na,la,fa,iexc )
  integer :: it, ierr
  real(dp), allocatable :: rho(:), rhoc(:), vi(:), ea(:,:), rpk(:,:)
 
- real(dp) :: e1, e2
+ real(dp) :: e1, e2, eavg
  integer :: ii
  character(len=1) :: symb(0:3) = (/ 's', 'p', 'd', 'f' /)
  character(len=12) :: filename
@@ -45,13 +45,22 @@ subroutine corezeta( rr,zz,mmax,nc,nv,na,la,fa,iexc )
  do ii = 1, nc+nv
    if( la(ii) .eq. 0 ) then
      e1 = 0.0_DP
+     eavg = ea(ii,1)
    else
      e1 = ea(ii,1)-ea(ii,2)
+     eavg = ( dble( la(ii) ) * ea(ii,1) + dble( la(ii)+1 ) * ea(ii,2) ) &
+          / dble( 2*la(ii)+1 )
    endif
    e1 = e1 * 2.0_dp / dble( 2 * la( ii ) + 1 )
    e2 = e1 * Ryd2eV * 2.0_dp !* 4.0d0 / dble( 2 * la( ii ) + 1 )
-   write(99,'(F20.11,X,F20.11,X,I1,A1)') e2, e1, na(ii), symb(la(ii))
-   write(6,'(A,X,F20.11,X,F20.11,X,I1,A1)') 'OCEAN SO', e2, e1, na(ii), symb(la(ii))
+   write(99,'(F20.11,X,F20.11,X,I1,A1,F20.11,X,F20.11)') e2, e1, na(ii), symb(la(ii)), & 
+              eavg*Ryd2eV*2.0_DP, eavg
+   write(6,'(A,X,F20.11,X,F20.11,X,I1,A1,F20.11,X,F20.11)') 'OCEAN SO', e2, e1, na(ii), &
+              symb(la(ii)), &
+              ea(ii,1)*Ryd2ev*2.0_DP, ea(ii,2)*Ryd2eV*2.0_DP
+   
+   write(6,*) 'relatom', ea(ii,1), ii, na(ii), la(ii), 1
+   if( la(ii) .ne. 0 ) write(6,*) 'relatom', ea(ii,2), ii, na(ii), la(ii), 2
  enddo
  close(99)
 
